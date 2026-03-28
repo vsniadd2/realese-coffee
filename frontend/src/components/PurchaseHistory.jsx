@@ -707,6 +707,10 @@ const PurchaseHistory = () => {
                               <img src="/img/card-svgrepo-com.svg" alt="Карта" className="payment-badge-icon" />
                               <span>Карта</span>
                             </span>
+                          ) : purchase.payment_method === 'credit' ? (
+                            <span className="payment-method-badge payment-method-credit-badge">
+                              <span>Зачисление</span>
+                            </span>
                           ) : (
                             <span className="payment-method-badge payment-method-cash-badge">
                               <img src="/img/money-svgrepo-com.svg" alt="Наличные" className="payment-badge-icon" />

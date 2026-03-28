@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
 import './ImageUploader.css'
 
-const ImageUploader = ({ onImageSelect, currentImage, maxSizeMB = 25, disabled = false }) => {
+const ImageUploader = ({ onImageSelect, currentImage, maxSizeMB = 5, disabled = false }) => {
   const [isDragging, setIsDragging] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const fileInputRef = useRef(null)

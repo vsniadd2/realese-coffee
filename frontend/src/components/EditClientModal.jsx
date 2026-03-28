@@ -14,7 +14,8 @@ const EditClientModal = ({ client, onClose }) => {
     lastName: '',
     middleName: '',
     clientId: '',
-    status: 'standart'
+    status: 'standart',
+    personalDiscountPercent: '0'
   })
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -26,12 +27,15 @@ const EditClientModal = ({ client, onClose }) => {
 
   useEffect(() => {
     if (client) {
+      const pd = client.personal_discount_percent
       setFormData({
         firstName: client.first_name || '',
         lastName: client.last_name || '',
         middleName: normalizeMiddleNameForDisplay(client.middle_name) || '',
         clientId: client.client_id || '',
-        status: client.status || 'standart'
+        status: client.status || 'standart',
+        personalDiscountPercent:
+          pd != null && Number.parseFloat(pd) > 0 ? String(Number.parseFloat(pd)) : '0'
       })
     }
   }, [client])
@@ -52,12 +56,15 @@ const EditClientModal = ({ client, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    const pdRaw = Number.parseFloat(String(formData.personalDiscountPercent).replace(',', '.'))
+    const personalDiscountPercent = Number.isFinite(pdRaw) ? Math.min(100, Math.max(0, pdRaw)) : 0
     const payload = {
       firstName: formData.firstName,
       lastName: formData.lastName,
       middleName: formData.middleName,
       clientId: formData.clientId,
-      status: formData.status
+      status: formData.status,
+      personalDiscountPercent
     }
     try {
       await clientService.update(client.id, payload)
@@ -196,6 +203,20 @@ const EditClientModal = ({ client, onClose }) => {
                   <option value="standart">STANDART</option>
                   <option value="gold">GOLD</option>
                 </select>
+              </div>
+              <div className="input-group">
+                <label>Персональная скидка, %</label>
+                <input
+                  type="number"
+                  name="personalDiscountPercent"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={formData.personalDiscountPercent}
+                  onChange={handleChange}
+                  disabled={loading}
+                  placeholder="0"
+                />
               </div>
             </div>
             <div className="edit-client-actions">

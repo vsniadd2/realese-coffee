@@ -120,7 +120,6 @@
     min-width: 1.35rem;
     min-height: 1.35rem;
     cursor: pointer;
-    accent-color: var(--primary);
 }
 
 
@@ -276,7 +275,8 @@
 .employee-checkbox-wrap input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: var(--primary);
+    min-width: 18px;
+    min-height: 18px;
 }
 
 .employee-checkbox-hint {

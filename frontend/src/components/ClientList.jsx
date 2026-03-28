@@ -11,7 +11,7 @@ import LoadingIndicator from './LoadingIndicator'
 import './ClientList.css'
 
 const ClientList = ({ onSelectClient }) => {
-  const { user } = useAuth()
+  const { user, refreshAccessToken } = useAuth()
   const isAdmin = user?.role === 'admin'
   // Загружаем сохраненный поисковый запрос из localStorage
   const [page, setPage] = useState(1)
@@ -165,16 +165,32 @@ const ClientList = ({ onSelectClient }) => {
   const loadGlobalStats = useCallback(async () => {
     const isFirstLoad = !hasStatsLoadedRef.current
     if (isFirstLoad) setStatsLoading(true)
-    try {
+    const fetchStats = async () => {
       const stats = await clientService.getStats()
       setGlobalStats(stats)
       hasStatsLoadedRef.current = true
-    } catch {
-      setGlobalStats(null)
+    }
+    try {
+      await fetchStats()
+    } catch (err) {
+      if (err?.message === 'UNAUTHORIZED') {
+        const refreshed = await refreshAccessToken()
+        if (refreshed) {
+          try {
+            await fetchStats()
+          } catch {
+            setGlobalStats(null)
+          }
+        } else {
+          setGlobalStats(null)
+        }
+      } else {
+        setGlobalStats(null)
+      }
     } finally {
       if (isFirstLoad) setStatsLoading(false)
     }
-  }, [])
+  }, [refreshAccessToken])
 
   useEffect(() => {
     loadGlobalStats()

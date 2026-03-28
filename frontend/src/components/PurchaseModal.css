@@ -2,19 +2,104 @@
   margin-top: 6px;
   color: var(--muted);
   font-size: 0.95rem;
+  line-height: 1.45;
+  max-width: 100%;
 }
 
-.purchase-summary {
+.purchase-subtitle-line {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+}
+
+.purchase-subtitle-dot {
+  color: var(--border);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.purchase-modal-tabs {
+  display: flex;
+  gap: 4px;
   margin-bottom: 20px;
-  padding: 12px 16px;
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.purchase-modal-tab {
+  padding: 10px 18px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.purchase-modal-tab:hover {
   color: var(--text);
+  background: var(--bg-soft);
+}
+
+.purchase-modal-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--primary);
+}
+
+.purchase-credit-panel {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 8px 0 8px;
+}
+
+.purchase-credit-desc {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.purchase-column-title {
+  margin: 0 0 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.employee-checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.employee-checkbox-wrap input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+}
+
+.employee-checkbox-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.employee-discount-badge {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .mono {

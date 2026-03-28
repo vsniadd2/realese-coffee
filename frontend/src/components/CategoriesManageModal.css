@@ -98,7 +98,8 @@
 .categories-manage-checkbox-label input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: var(--primary);
+  min-width: 18px;
+  min-height: 18px;
 }
 
 .categories-manage-form-block {
@@ -198,7 +199,8 @@
 .categories-add-form-checkbox input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--accent-purple);
+  min-width: 20px;
+  min-height: 20px;
   cursor: pointer;
 }
 
@@ -613,7 +615,8 @@
 .categories-manage-track-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: var(--accent-purple);
+  min-width: 18px;
+  min-height: 18px;
   cursor: pointer;
 }
 

@@ -457,6 +457,12 @@
     filter: brightness(0) saturate(100%) invert(25%) sepia(95%) saturate(2000%) hue-rotate(220deg) brightness(0.6);
 }
 
+.payment-method-credit-badge {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
 .payment-method-mixed-badge {
     background: rgba(139, 92, 246, 0.12);
     color: #6d28d9;

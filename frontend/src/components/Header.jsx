@@ -183,23 +183,20 @@ const Header = ({ onAddClient, onSelectClient, currentPage, onNavigate }) => {
               Категории и товары
             </button>
           )}
-          {pointLabel && (
-            <div className="mobile-nav-point">
-              <button
-                type="button"
-                className="mobile-nav-point-btn"
-                onClick={() => setPointMenuOpen((v) => !v)}
-                aria-expanded={pointMenuOpen}
-              >
-                {pointLabel}
-              </button>
-              {pointMenuOpen && (
-                <button type="button" className="mobile-nav-link mobile-nav-logout" onClick={handleLogout}>
-                  Выйти
-                </button>
-              )}
-            </div>
-          )}
+          <div className="mobile-nav-bottom">
+            <button
+              type="button"
+              className="mobile-nav-link mobile-nav-logout"
+              onClick={handleLogout}
+            >
+              Выйти
+            </button>
+            {pointLabel && (
+              <div className="mobile-nav-point" role="status">
+                <span className="mobile-nav-point-label">Точка: {pointLabel}</span>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
     </header>

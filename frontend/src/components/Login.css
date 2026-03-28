@@ -131,10 +131,11 @@
     font-weight: 400;
 }
 
-.login-checkbox input {
+.login-checkbox input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: var(--accent-purple);
+    min-width: 18px;
+    min-height: 18px;
     cursor: pointer;
 }
 

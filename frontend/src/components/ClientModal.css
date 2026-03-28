@@ -410,3 +410,35 @@
         font-size: 1rem;
     }
 }
+
+.employee-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.employee-checkbox-wrap input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+}
+
+.employee-checkbox-hint {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.employee-discount-badge {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 600;
+}

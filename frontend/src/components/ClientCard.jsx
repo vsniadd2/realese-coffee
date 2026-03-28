@@ -1,7 +1,8 @@
 import React from 'react'
 import './ClientCard.css'
 import { formatMinskDate } from '../utils/dateTime'
-import { normalizeMiddleNameForDisplay } from '../utils/clientDisplay'
+import { normalizeMiddleNameForDisplay, normalizeClientIdForDisplay } from '../utils/clientDisplay'
+import { personalDiscountPercent } from '../utils/clientDiscount'
 
 const ClientCard = ({ client }) => {
   const fullName = [
@@ -15,6 +16,8 @@ const ClientCard = ({ client }) => {
   const createdDate = formatMinskDate(client.created_at)
 
   const isGold = client.status === 'gold'
+  const personalPct = personalDiscountPercent(client)
+  const orderDiscountPct = Math.min(100, personalPct + (isGold ? 10 : 0))
 
   return (
     <div className={`client-card ${client.status}`}>
@@ -39,8 +42,8 @@ const ClientCard = ({ client }) => {
         <span className="total-spent-value">
           {parseFloat(client.total_spent).toFixed(2)} BYN
         </span>
-        {isGold && (
-          <div className="discount-active">🎉 Скидка 10% активна</div>
+        {orderDiscountPct > 0 && (
+          <div className="discount-active">Скидка на заказы: {orderDiscountPct}%</div>
         )}
       </div>
     </div>

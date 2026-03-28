@@ -5,6 +5,7 @@ import { useNotification } from './NotificationProvider'
 import { useDataRefresh } from '../contexts/DataRefreshContext'
 import ProductSelector from './ProductSelector'
 import PaymentMethodModal from './PaymentMethodModal'
+import { buildPurchaseDiscountInfo, effectiveDiscountPercentForPurchase, priceAfterPercentDiscount } from '../utils/clientDiscount'
 import './ClientModal.css'
 
 const ClientModal = ({ onClose }) => {
@@ -22,6 +23,7 @@ const ClientModal = ({ onClose }) => {
   const [productsTotal, setProductsTotal] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [pendingOrderData, setPendingOrderData] = useState(null)
+  const [employeeDiscount, setEmployeeDiscount] = useState(false)
 
   const { addClient, addPurchase } = useClients()
   const { showNotification } = useNotification()
@@ -36,6 +38,8 @@ const ClientModal = ({ onClose }) => {
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [onClose])
+
+  const employeeDiscountAmount = employeeDiscount ? 1 : 0
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -71,7 +75,14 @@ const ClientModal = ({ onClose }) => {
       const mixedParts = paymentMethod === 'mixed' && options ? { cashPart: options.cashPart, cardPart: options.cardPart } : null
 
       if (orderData.type === 'existing') {
-        const purchaseResult = await addPurchase(orderData.clientId, orderData.price, orderData.items, paymentMethod, 0, mixedParts)
+        const purchaseResult = await addPurchase(
+          orderData.clientId,
+          orderData.price,
+          orderData.items,
+          paymentMethod,
+          orderData.employeeDiscount || 0,
+          mixedParts
+        )
         if (purchaseResult.success) {
           showNotification('Покупка успешно добавлена!', 'success')
           setTimeout(() => refreshAll(), 100)
@@ -82,6 +93,7 @@ const ClientModal = ({ onClose }) => {
             setProductsTotal(0)
             setCheckedClient(null)
             setDiscountInfo(null)
+            setEmployeeDiscount(false)
           }, 1000)
         } else {
           showNotification(purchaseResult.error || 'Ошибка при добавлении покупки', 'error')
@@ -94,7 +106,8 @@ const ClientModal = ({ onClose }) => {
           clientId: orderData.clientId,
           price: orderData.price,
           items: orderData.items,
-          paymentMethod
+          paymentMethod,
+          employeeDiscount: orderData.employeeDiscount || 0
         }
         if (mixedParts) {
           clientData.cashPart = mixedParts.cashPart
@@ -109,6 +122,7 @@ const ClientModal = ({ onClose }) => {
           setFormData({ firstName: '', lastName: '', middleName: '', clientId: '', price: '' })
           setSelectedProducts({})
           setProductsTotal(0)
+          setEmployeeDiscount(false)
         } else {
           showNotification(result.error, 'error')
         }
@@ -137,20 +151,11 @@ const ClientModal = ({ onClose }) => {
           if (existingClient) {
             // Клиент найден - рассчитываем скидку и показываем информацию
             const price = productsTotal > 0 ? productsTotal : (parseFloat(formData.price) || 0)
-            const currentTotal = parseFloat(existingClient.total_spent) || 0
             
             setCheckedClient(existingClient)
             
-            const status = existingClient.status || 'standart'
-            const hasDiscount = price > 0 && status === 'gold'
-            if (hasDiscount) {
-              setDiscountInfo({
-                hasDiscount: true,
-                originalPrice: price,
-                finalPrice: price * 0.9,
-                discount: 10
-              })
-            }
+            const discPct = effectiveDiscountPercentForPurchase(existingClient, price)
+            setDiscountInfo(buildPurchaseDiscountInfo(existingClient, price))
             
             // Если клиент найден и указана цена, добавляем покупку
             if (price > 0) {
@@ -160,8 +165,16 @@ const ClientModal = ({ onClose }) => {
                 productPrice: item.product.price,
                 quantity: item.quantity
               }))
-              const finalAmount = hasDiscount ? price * 0.9 : price
-              setPendingOrderData({ type: 'existing', clientId: existingClient.id, price, items, finalAmount })
+              const afterDisc = priceAfterPercentDiscount(price, discPct)
+              const finalAmount = Math.max(0, afterDisc - employeeDiscountAmount)
+              setPendingOrderData({
+                type: 'existing',
+                clientId: existingClient.id,
+                price,
+                items,
+                finalAmount,
+                employeeDiscount: employeeDiscountAmount
+              })
               setShowPaymentModal(true)
               return
             } else {
@@ -198,7 +211,8 @@ const ClientModal = ({ onClose }) => {
         clientId: formData.clientId,
         price: finalPrice,
         items,
-        finalAmount: finalPrice
+        finalAmount: Math.max(0, finalPrice - employeeDiscountAmount),
+        employeeDiscount: employeeDiscountAmount
       })
       setShowPaymentModal(true)
     } catch (error) {
@@ -310,7 +324,8 @@ const ClientModal = ({ onClose }) => {
                 </div>
               )}
 
-              {(discountInfo && discountInfo.hasDiscount) || (checkedClient && productsTotal > 0) ? (
+              {(discountInfo && discountInfo.hasDiscount) ||
+              (checkedClient && (productsTotal > 0 || parseFloat(formData.price) > 0)) ? (
                 <div className="discount-preview" style={{ marginTop: 12 }}>
                   {discountInfo && discountInfo.hasDiscount && (
                     <>
@@ -322,20 +337,41 @@ const ClientModal = ({ onClose }) => {
                           {discountInfo.originalPrice.toFixed(2)} BYN
                         </div>
                         <div className="price-final">
-                          {discountInfo.finalPrice.toFixed(2)} BYN
+                          {Math.max(0, discountInfo.finalPrice - employeeDiscountAmount).toFixed(2)} BYN
+                          {employeeDiscountAmount > 0 && (
+                            <span className="employee-discount-badge"> (−1 BYN)</span>
+                          )}
                         </div>
                       </div>
                     </>
                   )}
-                  {checkedClient && productsTotal > 0 && !discountInfo && (
+                  {checkedClient && (productsTotal > 0 || parseFloat(formData.price) > 0) && !discountInfo && (
                     <div className="price-preview">
                       <div className="price-final">
-                        {productsTotal.toFixed(2)} BYN
+                        {Math.max(
+                          0,
+                          (productsTotal > 0 ? productsTotal : parseFloat(formData.price) || 0) - employeeDiscountAmount
+                        ).toFixed(2)}{' '}
+                        BYN
+                        {employeeDiscountAmount > 0 && (
+                          <span className="employee-discount-badge"> (−1 BYN)</span>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
               ) : null}
+
+              <label className="employee-checkbox-wrap">
+                <input
+                  type="checkbox"
+                  checked={employeeDiscount}
+                  onChange={(e) => setEmployeeDiscount(e.target.checked)}
+                  disabled={loading}
+                />
+                <span>Сотрудник</span>
+                {employeeDiscount && <span className="employee-checkbox-hint">(−1 BYN к заказу)</span>}
+              </label>
 
               <div className="modal-actions">
                 <button

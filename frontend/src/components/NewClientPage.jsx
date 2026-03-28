@@ -7,6 +7,12 @@ import { useAuth } from '../contexts/AuthContext'
 import ProductSelector from './ProductSelector'
 import PaymentMethodModal from './PaymentMethodModal'
 import { normalizeMiddleNameForDisplay, normalizeClientIdForDisplay } from '../utils/clientDisplay'
+import {
+  buildPurchaseDiscountInfo,
+  effectiveDiscountPercentForPurchase,
+  personalDiscountPercent,
+  priceAfterPercentDiscount
+} from '../utils/clientDiscount'
 import './NewClientPage.css'
 
 const NewClientPage = () => {
@@ -77,26 +83,13 @@ const NewClientPage = () => {
       return
     }
 
-    // Используем переданную цену
     const currentPrice = price !== undefined && price !== null ? price : 0
     if (currentPrice <= 0) {
       setDiscountInfo(null)
       return
     }
 
-    const status = client.status || 'standart'
-    const hasDiscount = status === 'gold'
-
-    if (hasDiscount) {
-      setDiscountInfo({
-        hasDiscount: true,
-        originalPrice: currentPrice,
-        finalPrice: currentPrice * 0.9,
-        discount: 10
-      })
-    } else {
-      setDiscountInfo(null)
-    }
+    setDiscountInfo(buildPurchaseDiscountInfo(client, currentPrice))
   }, [])
 
   // Поиск клиентов
@@ -437,16 +430,8 @@ const NewClientPage = () => {
             
             setCheckedClient(existingClient)
             
-            const status = existingClient.status || 'standart'
-            const hasDiscount = price > 0 && status === 'gold'
-            if (hasDiscount) {
-              setDiscountInfo({
-                hasDiscount: true,
-                originalPrice: price,
-                finalPrice: price * 0.9,
-                discount: 10
-              })
-            }
+            const discPct = effectiveDiscountPercentForPurchase(existingClient, price)
+            setDiscountInfo(buildPurchaseDiscountInfo(existingClient, price))
             
             // Если клиент найден и указана цена, добавляем покупку
             if (price > 0) {
@@ -456,7 +441,8 @@ const NewClientPage = () => {
                 productPrice: item.product.price,
                 quantity: item.quantity
               }))
-              const finalAmount = Math.max(0, (hasDiscount ? price * 0.9 : price) - employeeDiscountAmount)
+              const afterDisc = priceAfterPercentDiscount(price, discPct)
+              const finalAmount = Math.max(0, afterDisc - employeeDiscountAmount)
               setPendingOrderData({ 
                 type: 'existing', 
                 clientId: existingClient.id, 
@@ -698,6 +684,9 @@ const NewClientPage = () => {
                   <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
                     Статус: {checkedClient.status === 'gold' ? 'GOLD' : 'STANDART'} | 
                     Потрачено: {parseFloat(checkedClient.total_spent || 0).toFixed(2)} BYN
+                    {personalDiscountPercent(checkedClient) > 0 && (
+                      <> | Персональная скидка: {personalDiscountPercent(checkedClient)}%</>
+                    )}
                   </div>
                 </div>
               )}

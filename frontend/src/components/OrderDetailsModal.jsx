@@ -136,7 +136,9 @@ const OrderDetailsModal = ({ order, onClose, onMarkOperation, onStartReplacement
               ? `${parseFloat(transaction.cash_part || 0).toFixed(2)} наличными + ${parseFloat(transaction.card_part || 0).toFixed(2)} картой`
               : transaction.payment_method === 'card'
                 ? 'Карта'
-                : 'Наличные'}
+                : transaction.payment_method === 'credit'
+                  ? 'Зачисление на сумму покупок'
+                  : 'Наличные'}
           </div>
         )}
       </div>
@@ -311,9 +313,11 @@ const OrderDetailsModal = ({ order, onClose, onMarkOperation, onStartReplacement
                     ? `Смешанная: ${parseFloat(order.cash_part || 0).toFixed(2)} BYN наличными + ${parseFloat(order.card_part || 0).toFixed(2)} BYN картой`
                     : order.payment_method === 'card'
                       ? 'Карта'
-                      : order.payment_method === 'cash'
-                        ? 'Наличные'
-                        : '—'}
+                      : order.payment_method === 'credit'
+                        ? 'Зачисление на сумму покупок'
+                        : order.payment_method === 'cash'
+                          ? 'Наличные'
+                          : '—'}
                 </span>
               </div>
             </div>

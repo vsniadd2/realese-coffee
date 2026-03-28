@@ -183,7 +183,9 @@ const OrderSearchPage = () => {
                         ? `Смешанная (${parseFloat(order.cash_part || 0).toFixed(2)} наличными + ${parseFloat(order.card_part || 0).toFixed(2)} картой)`
                         : order.payment_method === 'card'
                           ? 'Карта'
-                          : 'Наличные'}
+                          : order.payment_method === 'credit'
+                            ? 'Зачисление на сумму покупок'
+                            : 'Наличные'}
                     </div>
                   </div>
                 </div>

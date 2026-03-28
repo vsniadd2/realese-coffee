@@ -1,3 +1,6 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -62,9 +65,70 @@ app.use(cors({
   origin: '*',
   credentials: true
 }));
-// Увеличиваем лимит для обработки больших base64 изображений (до 50 МБ)
+// Лимит тела запроса (base64-картинки товаров; на товаре отдельно проверяем ≤ 5 МБ)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
+
+/** Примерный размер бинарных данных из data URL или строки base64 */
+function getApproxDecodedImageBytes(dataStr) {
+  if (!dataStr || typeof dataStr !== 'string') return 0;
+  const comma = dataStr.indexOf(',');
+  const header = comma === -1 ? '' : dataStr.slice(0, comma);
+  const base64Part =
+    comma !== -1 && /^data:[^;]+;base64/i.test(header)
+      ? dataStr.slice(comma + 1).replace(/\s/g, '')
+      : dataStr.replace(/\s/g, '');
+  return Math.floor((base64Part.length * 3) / 4);
+}
+
+function validateProductImageSize(finalImageData) {
+  if (!finalImageData) return null;
+  if (getApproxDecodedImageBytes(finalImageData) > MAX_PRODUCT_IMAGE_BYTES) {
+    return 'Изображение превышает 5 МБ. Уменьшите файл или сожмите фото.';
+  }
+  return null;
+}
+
+/** Персональная скидка 0–100 из БД */
+function clampPersonalDiscountPercent(raw) {
+  const n = Number.parseFloat(raw);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(100, Math.max(0, n));
+}
+
+/**
+ * Процент скидки на заказ: персональная + GOLD 10% (если есть), не больше 100%.
+ * GOLD на эту покупку: клиент уже gold или после покупки total_spent >= 500.
+ * Первая покупка только что созданного клиента: без части GOLD (персональная может быть).
+ */
+function getPurchaseDiscountPercent(clientRow, priceFloat, opts = {}) {
+  const personal = clampPersonalDiscountPercent(clientRow.personal_discount_percent);
+  let goldPart = 0;
+  if (!opts.isNewClientFirstPurchase) {
+    const currentTotal = Number.parseFloat(clientRow.total_spent) || 0;
+    const price = Number.parseFloat(priceFloat) || 0;
+    const newTotal = currentTotal + price;
+    const alreadyGold = (clientRow.status || 'standart') === 'gold';
+    if (newTotal >= 500 || alreadyGold) goldPart = 10;
+  }
+  return Math.min(100, personal + goldPart);
+}
+
+function priceAfterPercentDiscount(price, discountPercent) {
+  const p = Number.parseFloat(price) || 0;
+  const d = Math.min(100, Math.max(0, Number.parseFloat(discountPercent) || 0));
+  return p * (1 - d / 100);
+}
+
+/** Замена заказа: персональная + GOLD 10% при статусе gold, не больше 100% */
+function getReplacementDiscountPercent(clientRow) {
+  if (!clientRow) return 0;
+  const personal = clampPersonalDiscountPercent(clientRow.personal_discount_percent);
+  const goldPart = (clientRow.status || 'standart') === 'gold' ? 10 : 0;
+  return Math.min(100, personal + goldPart);
+}
 
 // Инициализация базы данных при старте (будет выполнена перед запуском сервера)
 
@@ -176,6 +240,8 @@ app.get('/api/clients', verifyAccessToken, async (req, res) => {
         client_id,
         status,
         total_spent,
+        personal_discount_percent,
+        account_balance,
         ${CREATED_AT_MSK_CLIENT_SQL}
       FROM clients
     `;
@@ -280,6 +346,8 @@ app.get('/api/clients/search', verifyAccessToken, async (req, res) => {
           client_id,
           status,
           total_spent,
+          personal_discount_percent,
+          account_balance,
           ${CREATED_AT_MSK_CLIENT_SQL}
         FROM clients
         WHERE
@@ -347,21 +415,17 @@ app.post('/api/clients', verifyAccessToken, async (req, res) => {
     const clientResult = await pool.query(`
       INSERT INTO clients (first_name, last_name, middle_name, client_id, total_spent, status)
       VALUES ($1, $2, $3, $4, $5, 'standart')
-      RETURNING id, first_name, last_name, middle_name, client_id, status, total_spent,
+      RETURNING id, first_name, last_name, middle_name, client_id, status, total_spent, personal_discount_percent, account_balance,
         to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"+03:00"') as created_at,
         updated_at
     `, [firstName, lastName, middleName, clientId ?? null, 0]);
 
     const client = clientResult.rows[0];
 
-    // Расчет скидки и финальной суммы
-    // Скидка только при статусе GOLD (статус GOLD даётся при общей сумме заказов >= 500)
-    const status = client.status || 'standart';
-    const hasDiscount = status === 'gold';
-    const discount = hasDiscount ? 10 : 0;
+    // Расчёт скидки: персональная % + GOLD 10% (если есть), не больше 100%; на первую покупку нового клиента часть GOLD не даём
+    const discount = getPurchaseDiscountPercent(client, price, { isNewClientFirstPurchase: true });
     const employeeDiscount = parseFloat(req.body.employeeDiscount || 0);
-    // Сначала применяем скидку GOLD, затем скидку сотрудника
-    let finalAmount = discount > 0 ? Number.parseFloat(price) * 0.9 : Number.parseFloat(price);
+    let finalAmount = priceAfterPercentDiscount(price, discount);
     finalAmount = Math.max(0, finalAmount - employeeDiscount);
 
     const newTotal = Number.parseFloat(client.total_spent) + Number.parseFloat(price);
@@ -453,13 +517,10 @@ app.post('/api/clients/:id/purchase', verifyAccessToken, async (req, res) => {
     // Расчет новой общей суммы (только сумма, уже учтённая в БД)
     const newTotal = currentTotal + priceFloat;
 
-    // Скидка только при статусе GOLD. Статус gold автоматически при общей сумме заказов (из БД) >= 500
     const newStatus = newTotal >= 500 ? 'gold' : (clientData.status || 'standart');
-    const hasDiscount = newStatus === 'gold';
-    const discount = hasDiscount ? 10 : 0;
+    const discount = getPurchaseDiscountPercent(clientData, priceFloat, {});
     const employeeDiscount = parseFloat(req.body.employeeDiscount || 0);
-    // Сначала применяем скидку GOLD, затем скидку сотрудника
-    let finalAmount = discount > 0 ? priceFloat * 0.9 : priceFloat;
+    let finalAmount = priceAfterPercentDiscount(priceFloat, discount);
     finalAmount = Math.max(0, finalAmount - employeeDiscount);
 
     // Обновление клиента: total_spent и статус (gold при сумме >= 500)
@@ -523,6 +584,66 @@ app.post('/api/clients/:id/purchase', verifyAccessToken, async (req, res) => {
   } catch (error) {
     await dbClient.query('ROLLBACK');
     console.error('Ошибка добавления покупки:', error);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  } finally {
+    dbClient.release();
+  }
+});
+
+const MAX_ACCOUNT_CREDIT_AMOUNT = 1_000_000;
+
+// Зачисление суммы в накопительный total_spent (как покупка без товаров; баланс account_balance не трогаем)
+app.post('/api/clients/:id/account-credit', verifyAccessToken, async (req, res) => {
+  const dbClient = await pool.connect();
+  try {
+    const clientId = parseInt(req.params.id, 10);
+    if (!Number.isFinite(clientId) || clientId <= 0) {
+      return res.status(400).json({ error: 'Некорректный ID клиента' });
+    }
+    const amount = parseFloat(req.body.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ error: 'Укажите сумму больше 0' });
+    }
+    if (amount > MAX_ACCOUNT_CREDIT_AMOUNT) {
+      return res.status(400).json({ error: 'Сумма слишком велика' });
+    }
+
+    await dbClient.query('BEGIN');
+
+    const clientResult = await dbClient.query('SELECT * FROM clients WHERE id = $1', [clientId]);
+    if (clientResult.rows.length === 0) {
+      await dbClient.query('ROLLBACK');
+      return res.status(404).json({ error: 'Клиент не найден' });
+    }
+
+    const clientData = clientResult.rows[0];
+    const currentTotal = parseFloat(clientData.total_spent);
+    const newTotal = currentTotal + amount;
+    const newStatus = newTotal >= 500 ? 'gold' : (clientData.status || 'standart');
+
+    await dbClient.query(
+      'UPDATE clients SET total_spent = $1, status = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+      [newTotal, newStatus, clientId]
+    );
+
+    const createdByUser = req.user?.username || null;
+    const pointId = await getPointIdForInsert(req);
+    await dbClient.query(
+      `INSERT INTO transactions (client_id, amount, discount, final_amount, payment_method, employee_discount, created_by_user, point_id, cash_part, card_part)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [clientId, amount, 0, amount, 'credit', 0, createdByUser, pointId, null, null]
+    );
+
+    await dbClient.query('COMMIT');
+
+    const fresh = await pool.query(
+      `SELECT id, first_name, last_name, middle_name, client_id, status, total_spent, personal_discount_percent, account_balance, ${CREATED_AT_MSK_CLIENT_SQL}, updated_at FROM clients WHERE id = $1`,
+      [clientId]
+    );
+    res.json({ success: true, client: fresh.rows[0] });
+  } catch (error) {
+    await dbClient.query('ROLLBACK').catch(() => {});
+    console.error('Ошибка зачисления в total_spent:', error);
     res.status(500).json({ error: 'Ошибка сервера' });
   } finally {
     dbClient.release();
@@ -598,7 +719,7 @@ app.get('/api/admin/clients/:id', verifyAccessToken, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT id, first_name, last_name, middle_name, client_id, status, total_spent, ${CREATED_AT_MSK_CLIENT_SQL}, updated_at FROM clients WHERE id = $1`,
+      `SELECT id, first_name, last_name, middle_name, client_id, status, total_spent, personal_discount_percent, account_balance, ${CREATED_AT_MSK_CLIENT_SQL}, updated_at FROM clients WHERE id = $1`,
       [id]
     );
     if (result.rows.length === 0) {
@@ -614,15 +735,20 @@ app.get('/api/admin/clients/:id', verifyAccessToken, async (req, res) => {
 app.put('/api/admin/clients/:id', verifyAccessToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, middleName, clientId, status } = req.body;
+    const { firstName, lastName, middleName, clientId, status, personalDiscountPercent } = req.body;
     const clientIdVal = (typeof clientId === 'string' && clientId.trim() !== '') ? clientId.trim() : null;
+    const personalPct = clampPersonalDiscountPercent(
+      personalDiscountPercent !== undefined && personalDiscountPercent !== null
+        ? personalDiscountPercent
+        : req.body.personal_discount_percent
+    );
     const result = await pool.query(
       `UPDATE clients 
        SET first_name = $1, last_name = $2, middle_name = $3, 
-           client_id = $4, status = $5, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $6 
+           client_id = $4, status = $5, personal_discount_percent = $6, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $7 
        RETURNING *`,
-      [firstName || 'Без имени', lastName || 'Без фамилии', middleName || null, clientIdVal, status || 'standart', id]
+      [firstName || 'Без имени', lastName || 'Без фамилии', middleName || null, clientIdVal, status || 'standart', personalPct, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Клиент не найден' });
@@ -654,7 +780,7 @@ app.get('/api/clients/:clientId', verifyAccessToken, async (req, res) => {
     const { clientId } = req.params;
 
     const result = await pool.query(
-      `SELECT id, first_name, last_name, middle_name, client_id, status, total_spent, ${CREATED_AT_MSK_CLIENT_SQL}, updated_at FROM clients WHERE client_id = $1`,
+      `SELECT id, first_name, last_name, middle_name, client_id, status, total_spent, personal_discount_percent, account_balance, ${CREATED_AT_MSK_CLIENT_SQL}, updated_at FROM clients WHERE client_id = $1`,
       [clientId]
     );
 
@@ -1183,7 +1309,8 @@ app.get('/api/purchases', verifyAccessToken, async (req, res) => {
         c.last_name,
         c.middle_name,
         c.client_id as client_external_id,
-        c.status as client_status
+        c.status as client_status,
+        c.personal_discount_percent as client_personal_discount
       FROM transactions t
       LEFT JOIN clients c ON t.client_id = c.id
     `;
@@ -1270,7 +1397,7 @@ app.get('/api/purchases/:id', verifyAccessToken, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT ${TRANSACTION_SELECT_MSK}, t.employee_discount, t.point_id, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status
+      `SELECT ${TRANSACTION_SELECT_MSK}, t.employee_discount, t.point_id, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status, c.personal_discount_percent as client_personal_discount
        FROM transactions t
        LEFT JOIN clients c ON t.client_id = c.id
        WHERE t.id = $1`,
@@ -1302,7 +1429,7 @@ app.get('/api/purchases/:id', verifyAccessToken, async (req, res) => {
     const opType = (purchase.operation_type || 'sale').toLowerCase();
     if (opType === 'return' && purchase.id) {
       const repl = await pool.query(
-        `SELECT ${TRANSACTION_SELECT_MSK}, t.employee_discount, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status
+        `SELECT ${TRANSACTION_SELECT_MSK}, t.employee_discount, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status, c.personal_discount_percent as client_personal_discount
          FROM transactions t
          LEFT JOIN clients c ON t.client_id = c.id
          WHERE t.replacement_of_transaction_id = $1`,
@@ -1317,7 +1444,7 @@ app.get('/api/purchases/:id', verifyAccessToken, async (req, res) => {
       }
     } else if (opType === 'replacement' && purchase.replacement_of_transaction_id) {
       const ret = await pool.query(
-        `SELECT ${TRANSACTION_SELECT_MSK}, t.employee_discount, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status
+        `SELECT ${TRANSACTION_SELECT_MSK}, t.employee_discount, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status, c.personal_discount_percent as client_personal_discount
          FROM transactions t
          LEFT JOIN clients c ON t.client_id = c.id
          WHERE t.id = $1`,
@@ -1372,11 +1499,15 @@ app.post('/api/purchases/replacement', verifyAccessToken, async (req, res) => {
     }
     const clientId = original.client_id;
 
-    const hasDiscount = clientId != null
-      ? (await client.query('SELECT status FROM clients WHERE id = $1', [clientId])).rows[0]?.status === 'gold'
-      : false;
-    const discount = hasDiscount ? 10 : 0;
-    const finalAmount = discount > 0 ? priceFloat * 0.9 : priceFloat;
+    let discount = 0;
+    if (clientId != null) {
+      const cr = await client.query(
+        'SELECT status, personal_discount_percent FROM clients WHERE id = $1',
+        [clientId]
+      );
+      discount = getReplacementDiscountPercent(cr.rows[0]);
+    }
+    const finalAmount = priceAfterPercentDiscount(priceFloat, discount);
 
     // Обновить тот же заказ: сумма и оставляем operation_type как продажа
     await client.query(
@@ -1420,7 +1551,7 @@ app.post('/api/purchases/replacement', verifyAccessToken, async (req, res) => {
     await client.query('COMMIT');
 
     const updatedOrder = await pool.query(
-      `SELECT t.*, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status
+      `SELECT t.*, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status, c.personal_discount_percent as client_personal_discount
        FROM transactions t
        LEFT JOIN clients c ON t.client_id = c.id
        WHERE t.id = $1`,
@@ -1471,7 +1602,7 @@ app.patch('/api/purchases/:id', verifyAccessToken, async (req, res) => {
     );
     
     const updated = await pool.query(
-      `SELECT t.*, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status
+      `SELECT t.*, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status, c.personal_discount_percent as client_personal_discount
        FROM transactions t
        LEFT JOIN clients c ON t.client_id = c.id
        WHERE t.id = $1`,
@@ -1581,7 +1712,7 @@ app.get('/api/admin/transactions/:id', verifyAccessToken, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT t.*, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status
+      `SELECT t.*, c.first_name, c.last_name, c.middle_name, c.client_id as client_external_id, c.status as client_status, c.personal_discount_percent as client_personal_discount
        FROM transactions t
        JOIN clients c ON t.client_id = c.id
        WHERE t.id = $1`,
@@ -1699,6 +1830,7 @@ app.get('/api/orders/search', verifyAccessToken, async (req, res) => {
         c.middle_name,
         c.client_id as client_identifier,
         c.status as client_status,
+        c.personal_discount_percent as client_personal_discount,
         (
           SELECT json_agg(
             json_build_object(
@@ -1904,6 +2036,10 @@ app.post('/api/admin/products', verifyAccessToken, requireAdmin, async (req, res
     // imageUrl или imageData — base64 строка для хранения в image_data
     const imageSource = imageUrl ?? imageData;
     const finalImageData = imageSource && typeof imageSource === 'string' && imageSource.length > 0 ? imageSource : null;
+    const imageErr = validateProductImageSize(finalImageData);
+    if (imageErr) {
+      return res.status(400).json({ error: imageErr });
+    }
     const finalTags = tags && Array.isArray(tags) ? tags.join(',') : (tags || '');
     
     const result = await pool.query(
@@ -1947,6 +2083,10 @@ app.put('/api/admin/products/:id', verifyAccessToken, requireAdmin, async (req, 
     // imageUrl или imageData — base64 строка для хранения в image_data
     const imageSource = imageUrl ?? imageData;
     const finalImageData = imageSource && typeof imageSource === 'string' && imageSource.length > 0 ? imageSource : null;
+    const imageErrPut = validateProductImageSize(finalImageData);
+    if (imageErrPut) {
+      return res.status(400).json({ error: imageErrPut });
+    }
     const finalTags = tags && Array.isArray(tags) ? tags.join(',') : (tags || '');
     
     const result = await pool.query(

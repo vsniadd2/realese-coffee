@@ -97,6 +97,25 @@ export const clientService = {
     return response.json()
   },
 
+  async creditAccount(clientDbId, amount) {
+    const response = await fetch(`${API_URL}/clients/${clientDbId}/account-credit`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ amount })
+    })
+
+    if (response.status === 403) {
+      throw new Error('UNAUTHORIZED')
+    }
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(data.error || 'Ошибка зачисления на счёт')
+    }
+
+    return response.json()
+  },
+
   async createAnonymousPurchase(price, items = [], paymentMethod = 'cash', employeeDiscount = 0, mixedParts = null) {
     const body = { price, items, paymentMethod, employeeDiscount }
     if (paymentMethod === 'mixed' && mixedParts) {
@@ -173,7 +192,8 @@ export const clientService = {
         lastName: data.lastName,
         middleName: data.middleName,
         clientId: data.clientId,
-        status: data.status || 'standart'
+        status: data.status || 'standart',
+        personalDiscountPercent: data.personalDiscountPercent ?? 0
       })
     })
     if (response.status === 403) throw new Error('UNAUTHORIZED')

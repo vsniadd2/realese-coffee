@@ -196,8 +196,8 @@ const CategoriesPage = () => {
 
   const handleImageSelect = async (file) => {
     setError(null)
-    if (file.size > 25 * 1024 * 1024) {
-      setError('Размер файла не должен превышать 25 МБ')
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Размер файла не должен превышать 5 МБ')
       return
     }
     if (!file.type.startsWith('image/')) {
@@ -547,7 +547,7 @@ const CategoriesPage = () => {
                                   <ImageUploader
                                     onImageSelect={handleImageSelect}
                                     currentImage={imagePreview}
-                                    maxSizeMB={25}
+                                    maxSizeMB={5}
                                     disabled={imageCompressing}
                                   />
                                   {imagePreview && (
@@ -636,7 +636,7 @@ const CategoriesPage = () => {
                                         <ImageUploader
                                           onImageSelect={handleImageSelect}
                                           currentImage={imagePreview || formData.imageUrl || null}
-                                          maxSizeMB={25}
+                                          maxSizeMB={5}
                                           disabled={imageCompressing}
                                         />
                                         {(imagePreview || editProduct?.image_data) && (

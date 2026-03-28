@@ -4,6 +4,7 @@ import { useDataRefresh } from '../contexts/DataRefreshContext'
 import ProductSelector from './ProductSelector'
 import { purchaseHistoryService } from '../services/purchaseHistoryService'
 import { normalizeMiddleNameForDisplay } from '../utils/clientDisplay'
+import { buildReplacementDiscountInfo } from '../utils/clientDiscount'
 import './PurchaseModal.css'
 import './ReplacementOrderModal.css'
 
@@ -34,20 +35,8 @@ const ReplacementOrderModal = ({ order, onClose, onSuccess }) => {
   const discountInfo = useMemo(() => {
     const p = productsTotal > 0 ? productsTotal : Number.parseFloat(price)
     if (!Number.isFinite(p) || p <= 0) return null
-    const status = order?.client_status || 'standart'
-    const hasDiscount = status === 'gold'
-    if (hasDiscount) {
-      const finalPrice = p * 0.9
-      const savedAmount = p - finalPrice
-      return {
-        originalPrice: p,
-        finalPrice: finalPrice,
-        discount: 10,
-        savedAmount: savedAmount
-      }
-    }
-    return null
-  }, [price, productsTotal, order?.client_status])
+    return buildReplacementDiscountInfo(order, p)
+  }, [price, productsTotal, order])
 
   const handleProductsChange = (cart, total) => {
     setSelectedProducts(cart)

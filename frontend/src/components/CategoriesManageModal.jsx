@@ -233,8 +233,8 @@ const CategoriesManageModal = ({ onClose }) => {
   // Функция для обработки выбранного файла из ImageUploader
   const handleImageSelect = async (file) => {
     setError(null)
-    if (file.size > 25 * 1024 * 1024) {
-      setError('Размер файла не должен превышать 25 МБ')
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Размер файла не должен превышать 5 МБ')
       return
     }
     if (!file.type.startsWith('image/')) {
@@ -510,11 +510,11 @@ const CategoriesManageModal = ({ onClose }) => {
                                                 <input type="number" step="0.01" min="0" placeholder="0.00" value={formData.price} onChange={e => setFormData(prev => ({ ...prev, price: e.target.value }))} />
                                               </div>
                                               <div className="categories-manage-form-group">
-                                                <label>Фотография товара (необязательно, макс. 25 МБ)</label>
+                                                <label>Фотография товара (необязательно, макс. 5 МБ)</label>
                                                 <ImageUploader
                                                   onImageSelect={handleImageSelect}
                                                   currentImage={imagePreview}
-                                                  maxSizeMB={25}
+                                                  maxSizeMB={5}
                                                   disabled={imageCompressing}
                                                 />
                                                 {imagePreview && (
@@ -562,11 +562,11 @@ const CategoriesManageModal = ({ onClose }) => {
                                                       <input type="number" step="0.01" min="0" value={formData.price} onChange={e => setFormData(prev => ({ ...prev, price: e.target.value }))} />
                                                     </div>
                                                     <div className="categories-manage-form-group">
-                                                      <label>Фотография товара (необязательно, макс. 25 МБ)</label>
+                                                      <label>Фотография товара (необязательно, макс. 5 МБ)</label>
                                                       <ImageUploader
                                                         onImageSelect={handleImageSelect}
                                                         currentImage={imagePreview || prod.image_data}
-                                                        maxSizeMB={25}
+                                                        maxSizeMB={5}
                                                         disabled={imageCompressing}
                                                       />
                                                       {(imagePreview || prod.image_data) && (

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { authService } from '../services/authService'
 import { isAccessTokenExpired } from '../config/api'
 
@@ -19,21 +19,74 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [showHelloAfterLogin, setShowHelloAfterLogin] = useState(false)
 
-  useEffect(() => {
-    if (accessToken) {
-      try {
-        const stored = localStorage.getItem('userInfo')
-        if (stored) {
-          setUser(JSON.parse(stored))
-        } else {
-          setUser({ token: accessToken })
-        }
-      } catch {
-        setUser({ token: accessToken })
-      }
-    }
-    setLoading(false)
+  const logout = useCallback(() => {
+    setAccessToken(null)
+    setRefreshToken(null)
+    setUser(null)
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('userInfo')
   }, [])
+
+  const refreshAccessToken = useCallback(async () => {
+    const rtk = localStorage.getItem('refreshToken')
+    if (!rtk) {
+      logout()
+      return false
+    }
+
+    try {
+      const data = await authService.refreshToken(rtk)
+      setAccessToken(data.accessToken)
+      setRefreshToken(rtk)
+      localStorage.setItem('accessToken', data.accessToken)
+      if (data.user) {
+        setUser(prev => {
+          const merged = { ...prev, ...data.user }
+          localStorage.setItem('userInfo', JSON.stringify(merged))
+          return merged
+        })
+      }
+      return true
+    } catch {
+      logout()
+      return false
+    }
+  }, [logout])
+
+  /** До первого рендера приложения — иначе /api/* уходит с просроченным JWT и даёт 403 */
+  const ensureValidToken = useCallback(async () => {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    if (!isAccessTokenExpired(token)) return
+    await refreshAccessToken()
+  }, [refreshAccessToken])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const at = localStorage.getItem('accessToken')
+      if (at) {
+        try {
+          const stored = localStorage.getItem('userInfo')
+          if (stored) {
+            setUser(JSON.parse(stored))
+          } else {
+            setUser({ token: at })
+          }
+        } catch {
+          setUser({ token: at })
+        }
+        await ensureValidToken()
+      }
+      if (!cancelled) {
+        setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [ensureValidToken])
 
   const login = async (username, password) => {
     try {
@@ -55,49 +108,6 @@ export const AuthProvider = ({ children }) => {
   }
 
   const clearShowHello = () => setShowHelloAfterLogin(false)
-
-  const logout = () => {
-    setAccessToken(null)
-    setRefreshToken(null)
-    setUser(null)
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('userInfo')
-  }
-
-  const refreshAccessToken = async () => {
-    const rtk = refreshToken || localStorage.getItem('refreshToken')
-    if (!rtk) {
-      logout()
-      return false
-    }
-
-    try {
-      const data = await authService.refreshToken(rtk)
-      setAccessToken(data.accessToken)
-      setRefreshToken(rtk)
-      localStorage.setItem('accessToken', data.accessToken)
-      if (data.user) {
-        setUser(prev => {
-          const merged = { ...prev, ...data.user }
-          localStorage.setItem('userInfo', JSON.stringify(merged))
-          return merged
-        })
-      }
-      return true
-    } catch (error) {
-      logout()
-      return false
-    }
-  }
-
-  /** Обновляет access token, если он истёк (чтобы не получать 403 при запросах) */
-  const ensureValidToken = async () => {
-    const token = localStorage.getItem('accessToken')
-    if (!token) return
-    if (!isAccessTokenExpired(token)) return
-    await refreshAccessToken()
-  }
 
   const value = {
     user,
