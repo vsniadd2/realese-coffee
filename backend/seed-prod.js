@@ -73,14 +73,36 @@ function parseDateTime(dateStr) {
   return new Date();
 }
 
+const DEFAULT_CSV_NAME = 'clients_74d3ad66-b236-4d84-9bdf-1f4cdc7cb72e.csv';
+
+function resolveCsvPath() {
+  const name = DEFAULT_CSV_NAME;
+  const candidates = [
+    process.env.SEED_CSV_PATH,
+    path.join(__dirname, '..', name),
+    path.join(__dirname, name),
+    path.join('/repo', name)
+  ].filter(Boolean);
+
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
 async function seedDatabase() {
-  const csvPath = path.join(__dirname, '..', 'clients_74d3ad66-b236-4d84-9bdf-1f4cdc7cb72e.csv');
-  
-  if (!fs.existsSync(csvPath)) {
-    console.error(`CSV файл не найден: ${csvPath}`);
-    console.log('Положите файл clients_74d3ad66-b236-4d84-9bdf-1f4cdc7cb72e.csv в корень проекта');
+  const csvPath = resolveCsvPath();
+
+  if (!csvPath) {
+    console.error('CSV файл не найден. Варианты:');
+    console.error(`  - корень репозитория: ../${DEFAULT_CSV_NAME}`);
+    console.error(`  - папка backend: ./${DEFAULT_CSV_NAME}`);
+    console.error('  - переменная SEED_CSV_PATH=/полный/путь/к/файлу.csv');
+    console.error('  - в Docker: файл в корне проекта (том /repo в compose)');
     process.exit(1);
   }
+
+  console.log(`CSV: ${csvPath}`);
   
   console.log('Парсинг CSV файла...');
   const clients = parseCSV(csvPath);

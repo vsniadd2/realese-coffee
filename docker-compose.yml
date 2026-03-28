@@ -51,6 +51,8 @@ services:
       - ./backend:/app
       - /app/node_modules
       - ./lol:/lol
+      # Корень репозитория (read-only): seed-prod.js читает CSV из /repo/
+      - .:/repo:ro
 
   frontend:
     build:
