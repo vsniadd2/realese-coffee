@@ -1,0 +1,245 @@
+.image-uploader {
+  width: 100%;
+}
+
+.image-uploader-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 40px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background-color: var(--bg-soft);
+  cursor: pointer;
+}
+
+.image-uploader-dropzone:hover {
+  border-color: var(--accent-purple);
+  background-color: var(--accent-purple-light);
+}
+
+.image-uploader-dropzone.dragging {
+  border-color: var(--accent-purple);
+  background-color: var(--accent-purple-light);
+  border-style: solid;
+  transform: scale(1.02);
+}
+
+.image-uploader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.image-uploader-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
+}
+
+.image-uploader-dropzone.dragging .image-uploader-icon {
+  color: var(--accent-purple);
+}
+
+.image-uploader-text {
+  font-size: 16px;
+  color: var(--text);
+  margin: 0;
+}
+
+.image-uploader-button {
+  padding: 10px 24px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.image-uploader-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.image-uploader-button:active {
+  transform: scale(0.98);
+}
+
+.image-uploader-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.image-uploader-loading-text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.image-uploader-dropzone.image-uploader-disabled {
+  cursor: wait;
+}
+
+.image-uploader-preview-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background-color: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+}
+
+.image-uploader-preview {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  object-fit: contain;
+  box-shadow: var(--shadow-sm);
+}
+
+.image-uploader-preview-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.image-uploader-change-btn {
+  padding: 8px 16px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.image-uploader-change-btn:hover {
+  background-color: var(--primary-hover);
+}
+
+.image-uploader-change-btn:active {
+  transform: scale(0.98);
+}
+
+.image-uploader-error {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #fee;
+  color: #c33;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Планшеты и мобильные (768px и меньше) */
+@media (max-width: 768px) {
+  .image-uploader-dropzone {
+    padding: 32px 16px;
+  }
+
+  .image-uploader-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .image-uploader-text {
+    font-size: 15px;
+  }
+
+  .image-uploader-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  .image-uploader-preview-container {
+    padding: 16px;
+  }
+
+  .image-uploader-preview {
+    max-height: 260px;
+  }
+}
+
+/* Мобильные (480px и меньше) */
+@media (max-width: 480px) {
+  .image-uploader-dropzone {
+    padding: 24px 14px;
+  }
+
+  .image-uploader-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .image-uploader-text {
+    font-size: 14px;
+  }
+
+  .image-uploader-button {
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+
+  .image-uploader-preview-container {
+    padding: 14px;
+  }
+
+  .image-uploader-preview {
+    max-height: 220px;
+  }
+
+  .image-uploader-preview-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .image-uploader-change-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+/* Маленькие телефоны (360px и меньше) */
+@media (max-width: 360px) {
+  .image-uploader-dropzone {
+    padding: 20px 12px;
+  }
+
+  .image-uploader-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .image-uploader-text {
+    font-size: 13px;
+  }
+
+  .image-uploader-hint {
+    font-size: 12px;
+  }
+
+  .image-uploader-preview {
+    max-height: 180px;
+  }
+}
+
+/* Очень маленькие экраны (320px и меньше) */
+@media (max-width: 320px) {
+  .image-uploader-dropzone {
+    padding: 16px 10px;
+  }
+
+  .image-uploader-preview {
+    max-height: 160px;
+  }
+}

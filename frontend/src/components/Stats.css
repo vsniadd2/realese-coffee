@@ -1,0 +1,132 @@
+.stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat-card {
+    background: var(--card);
+    padding: 24px 32px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card.gold {
+    background: rgba(245, 175, 25, 0.12);
+    color: #8a5b00;
+    border-color: rgba(245, 175, 25, 0.3);
+}
+
+.stat-card.standart {
+    background: var(--accent-purple-light);
+    color: var(--text);
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    min-width: 4ch;
+    display: inline-block;
+    text-align: left;
+}
+
+.stat-value:has(+ .stat-value-changed) {
+    animation: numberPulse 0.5s ease-out;
+}
+
+@keyframes numberPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Планшеты (1024px и меньше) */
+@media (max-width: 1024px) {
+    .stats {
+        gap: 16px;
+    }
+
+    .stat-card {
+        padding: 20px 24px;
+    }
+}
+
+/* Планшеты (768px и меньше) */
+@media (max-width: 768px) {
+    .stats {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 18px 20px;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+    }
+}
+
+/* Мобильные устройства (480px и меньше) */
+@media (max-width: 480px) {
+    .stats {
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 16px 18px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+    }
+}
+
+/* Маленькие телефоны (360px и меньше) */
+@media (max-width: 360px) {
+    .stats {
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 14px 16px;
+    }
+
+    .stat-value {
+        font-size: 1.35rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+}
+
+/* Очень маленькие экраны (320px и меньше) */
+@media (max-width: 320px) {
+    .stat-value {
+        font-size: 1.25rem;
+    }
+}

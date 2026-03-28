@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Брейкпоинты для медиа-запросов (для справки, в CSS не используются как переменные) */
+    /* 1280px — малый ноутбук, 1024px — планшет альбом, 768px — планшет портрет, 600px — большой телефон, 480px — телефон, 360px — малый телефон, 320px — очень малый */
+    
+    /* Основные цвета - светлая палитра */
+    --bg: #ffffff;
+    --bg-soft: #fafbfc;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #4a5568;
+    --muted: #718096;
+    --border: #cbd5e1;
+    --border-soft: #e2e8f0;
+    
+    /* Акцентные цвета - темный charcoal для кнопок */
+    --primary: #1a1a1a;
+    --primary-hover: #2d2d2d;
+    --primary-light: #f7f7f7;
+    
+    /* Градиент для акцентов (персиковый → лавандовый) */
+    --gradient-start: #ffe5d9;
+    --gradient-end: #e8d5ff;
+    --gradient: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    
+    /* Фиолетовые акценты для интерактивных элементов */
+    --accent-purple: #8b5cf6;
+    --accent-purple-light: rgba(139, 92, 246, 0.1);
+    
+    /* Фокус и тени */
+    --primary-focus: rgba(139, 92, 246, 0.15);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06);
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
+    
+    /* Скругления */
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+button, input, select, textarea {
+    font: inherit;
+    font-family: inherit;
+}
+
+/* Убираем синюю обводку/тень с кнопок — оставляем только на полях ввода */
+button:focus,
+button:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+/* ========================================
+   УСТРАНЕНИЕ ВИЗУАЛЬНЫХ СКАЧКОВ
+   ======================================== */
+
+/* Плавные переходы для всех элементов */
+* {
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+
+/* Отключаем transition для элементов ввода и интерактивных элементов */
+input, textarea, select, button, a, [role="button"] {
+    transition: none;
+}
+
+/* Плавная прокрутка */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Устранение скачков при изменении содержимого */
+table, .clients-table-wrap, .purchases-table-wrap {
+    contain: layout style;
+    will-change: auto;
+}
+
+/* Стабильная высота для таблиц */
+.clients-table, .purchases-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+/* Предотвращение layout shift при загрузке */
+.stat-card, .client-card, .purchase-row {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 60px;
+}
+
+/* Плавное появление элементов */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Применяем к новым элементам */
+.client-row, .purchase-row, .stat-card {
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Стабилизация размеров при обновлении */
+.clients-table-wrap, .purchases-table-wrap {
+    min-height: 400px;
+    position: relative;
+}
+
+/* Предотвращение мерцания при обновлении */
+.clients-table tbody, .purchases-table tbody {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* Оптимизация рендеринга для больших списков */
+.client-row, .purchase-row {
+    transform: translateZ(0);
+    will-change: auto;
+}
+
+/* ========================================
+   ДОПОЛНИТЕЛЬНЫЕ ОПТИМИЗАЦИИ
+   ======================================== */
+
+/* Уменьшение repaint при ховере */
+button, a, .clickable {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Оптимизация анимаций */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* GPU-ускорение для модальных окон */
+.modal, .modal-content, .modal-overlay {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Стабилизация скроллбаров */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-soft);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--bg-soft);
+}
+
+/* Предотвращение мерцания текста */
+body, input, button, textarea, select {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Оптимизация для touch устройств */
+@media (hover: none) and (pointer: coarse) {
+    button, a, .clickable {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+}

@@ -1,0 +1,133 @@
+/* Базовые стили модалки — как на основном сайте */
+.edit-client-modal .modal-content {
+  max-width: 520px;
+}
+
+.edit-client-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.edit-client-actions .btn-submit {
+  flex: 1;
+  min-width: 140px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--primary);
+  color: white;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.edit-client-actions .btn-submit:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.edit-client-actions .btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-client-status-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  background: var(--bg-soft);
+  color: var(--text);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.edit-client-status-select:focus {
+  border-color: var(--accent-purple);
+  outline: none;
+  box-shadow: 0 0 0 4px var(--primary-focus);
+  background: var(--card);
+}
+
+.edit-client-status-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-delete-client {
+  padding: 12px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--card);
+  color: var(--text);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-delete-client:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.08);
+  border-color: #dc3545;
+  color: #dc3545;
+  transform: translateY(-1px);
+}
+
+.btn-delete-client:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Планшеты (768px и меньше) */
+@media (max-width: 768px) {
+  .edit-client-modal .modal-content {
+    width: 95%;
+    max-width: 520px;
+  }
+
+  .edit-client-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .edit-client-actions .btn-submit,
+  .btn-delete-client {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+/* Мобильные (480px и меньше) */
+@media (max-width: 480px) {
+  .edit-client-modal .modal-content {
+    width: calc(100% - 24px);
+    margin: 12px;
+    padding: 16px;
+  }
+
+  .edit-client-status-select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Маленькие телефоны (360px и меньше) */
+@media (max-width: 360px) {
+  .edit-client-modal .modal-content {
+    width: calc(100% - 20px);
+    margin: 10px;
+    padding: 14px;
+  }
+
+  .edit-client-actions .btn-submit,
+  .btn-delete-client {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+}

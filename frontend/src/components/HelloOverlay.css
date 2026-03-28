@@ -1,0 +1,57 @@
+/* Фон «Hello» — позади всего контента, строго на всю ширину и высоту экрана */
+.hello-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  z-index: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.hello-text {
+  font-family: 'Dancing Script', cursive;
+  font-weight: 700;
+  font-size: clamp(6rem, 38vw, 56rem);
+  color: var(--text, #1a1a1a);
+  opacity: 0;
+  animation: hello-slide-in-out 3s ease-in-out forwards;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+  display: block;
+  width: 100vw;
+  max-width: 100vw;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  text-align: center;
+  letter-spacing: 0.15em;
+}
+
+@keyframes hello-slide-in-out {
+  0% {
+    opacity: 0;
+    transform: translateX(-1.2em);
+  }
+  18% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  82% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0.6em);
+  }
+}

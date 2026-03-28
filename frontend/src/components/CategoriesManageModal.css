@@ -1,0 +1,807 @@
+.categories-manage-content {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.categories-manage-error {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.categories-manage-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.categories-manage-body {
+  padding-top: 8px;
+}
+
+.categories-manage-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--accent-purple);
+  line-height: 1.45;
+}
+
+.categories-manage-actions {
+  margin-bottom: 20px;
+}
+
+.categories-manage-btn-add {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.categories-manage-btn-add:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.categories-manage-btn-add-sm {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.categories-manage-btn-add-sm:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.categories-manage-form-row-with-checkbox {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.categories-manage-form-row-with-checkbox .categories-manage-input-wrap {
+  flex: 1;
+  min-width: 200px;
+}
+.categories-manage-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.categories-manage-checkbox-label.categories-manage-checkbox-right {
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+.categories-manage-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.categories-manage-form-block {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--bg-soft);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+/* Форма «Новая категория» — под стилистику сайта */
+.categories-add-form {
+  margin-bottom: 20px;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.categories-add-form-title {
+  margin: 0;
+  padding: 18px 24px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.categories-add-form-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.categories-add-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.categories-add-form-field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.categories-add-form-field input {
+  padding: 12px 16px;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.categories-add-form-field input:hover {
+  border-color: var(--muted);
+}
+
+.categories-add-form-field input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 4px var(--primary-focus);
+  background: var(--card);
+}
+
+.categories-add-form-field input::placeholder {
+  color: var(--muted);
+}
+
+.categories-add-form-field-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.categories-add-form-checkbox-row {
+  padding: 16px 18px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--accent-purple);
+}
+
+.categories-add-form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.categories-add-form-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-purple);
+  cursor: pointer;
+}
+
+.categories-add-form-checkbox-text {
+  flex: 1;
+}
+
+.categories-add-form-checkbox-desc {
+  margin: 10px 0 0 32px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.categories-add-form-footer {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.categories-add-form-btn-save {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.categories-add-form-btn-save:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.categories-add-form-btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.categories-add-form-btn-cancel {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.categories-add-form-btn-cancel:hover {
+  background: var(--bg-soft);
+  border-color: var(--muted);
+}
+
+@media (max-width: 480px) {
+  .categories-add-form-title {
+    padding: 14px 18px;
+    font-size: 1rem;
+  }
+
+  .categories-add-form-body {
+    padding: 18px;
+    gap: 16px;
+  }
+
+  .categories-add-form-footer {
+    flex-direction: column;
+  }
+
+  .categories-add-form-btn-save,
+  .categories-add-form-btn-cancel {
+    width: 100%;
+  }
+}
+
+/* Новый блок формы — ровный вертикальный макет */
+.categories-manage-form-block-new {
+  padding: 20px 24px;
+  max-width: 480px;
+}
+
+.categories-manage-form-block-new .categories-manage-form-title {
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+}
+
+.categories-manage-form-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.categories-manage-form-stacked .categories-manage-form-group {
+  gap: 8px;
+}
+
+.categories-manage-form-stacked .categories-manage-form-actions {
+  margin-top: 4px;
+  padding-top: 6px;
+}
+
+.categories-manage-checkbox-block {
+  padding: 14px 16px;
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+}
+
+.categories-manage-checkbox-block .categories-manage-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.categories-manage-form-hint {
+  margin: 8px 0 0 28px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.categories-manage-form-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 14px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.categories-manage-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.categories-manage-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.categories-manage-form-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.categories-manage-form-group input[type="text"],
+.categories-manage-form-group input[type="number"] {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  max-width: 400px;
+}
+
+/* Главное поле ввода — название категории */
+.categories-manage-input-main {
+  width: 100%;
+  max-width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.categories-manage-input-main::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.categories-manage-input-main:hover {
+  border-color: var(--muted);
+  background: var(--bg-soft);
+}
+
+.categories-manage-input-main:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12);
+  background: var(--card);
+}
+
+.categories-manage-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.categories-manage-form .categories-manage-form-group input[type="text"],
+.categories-manage-form .categories-manage-form-group input[type="number"],
+.categories-manage-form-group input {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  min-width: 140px;
+  background: var(--card);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  width: 100%;
+}
+
+.categories-manage-form .categories-manage-form-group input[type="text"]::placeholder,
+.categories-manage-form .categories-manage-form-group input[type="number"]::placeholder,
+.categories-manage-form-group input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.categories-manage-form .categories-manage-form-group input[type="text"]:hover,
+.categories-manage-form .categories-manage-form-group input[type="number"]:hover,
+.categories-manage-form-group input:hover {
+  border-color: var(--muted);
+  background: var(--bg-soft);
+}
+
+.categories-manage-form .categories-manage-form-group input[type="text"]:focus,
+.categories-manage-form .categories-manage-form-group input[type="number"]:focus,
+.categories-manage-form-group input:focus {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  background: var(--card);
+}
+
+.categories-manage-form-actions button,
+.categories-manage-form button {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.categories-manage-form-actions button:hover:not(:disabled),
+.categories-manage-form button:hover:not(:disabled) {
+  background: var(--bg-soft);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.categories-manage-form-actions button.categories-manage-btn-save,
+.categories-manage-form button.categories-manage-btn-save {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.categories-manage-form-actions button.categories-manage-btn-save:hover:not(:disabled),
+.categories-manage-form button.categories-manage-btn-save:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.categories-manage-form-actions button.categories-manage-btn-cancel:hover,
+.categories-manage-form button.categories-manage-btn-cancel:hover {
+  border-color: var(--border);
+}
+
+.categories-manage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.categories-manage-item {
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.categories-manage-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border);
+}
+
+.categories-manage-item.sub {
+  margin-left: 24px;
+  border-left: 3px solid var(--muted);
+}
+
+.categories-manage-item.product {
+  margin-left: 48px;
+  border-left: 3px solid var(--border);
+}
+
+.categories-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  flex-wrap: wrap;
+}
+
+/* Вся строка раскрывается по клику — категория или подкатегория */
+.categories-manage-row-clickable {
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.categories-manage-row-clickable:hover {
+  background: var(--bg-soft);
+}
+
+.categories-manage-row-clickable:focus {
+  outline: none;
+}
+
+.categories-manage-row-clickable:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 2px;
+}
+
+.categories-manage-expand {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text);
+  flex-shrink: 0;
+  transition: background 0.2s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.categories-manage-row-clickable:hover .categories-manage-expand {
+  background: var(--border-soft);
+}
+
+.categories-manage-row-clickable:focus .categories-manage-expand,
+.categories-manage-row-clickable:hover .categories-manage-expand {
+  transform: scale(1.05);
+}
+
+.categories-manage-name-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.categories-manage-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+.categories-manage-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.categories-manage-row-card .categories-manage-name {
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.categories-manage-price {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.categories-manage-track-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.categories-manage-track-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-purple);
+  cursor: pointer;
+}
+
+.categories-manage-actions-row {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.categories-manage-btn-sm {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.categories-manage-btn-sm:hover {
+  background: var(--bg-soft);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.categories-manage-btn-sm.danger {
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.categories-manage-btn-sm.danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.categories-manage-children {
+  padding: 12px 14px 14px 44px;
+  background: var(--bg-soft);
+  border-top: 1px solid var(--border-soft);
+}
+
+.categories-manage-content .close-modal {
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.categories-manage-content .close-modal:hover {
+  transform: scale(1.05);
+}
+
+.categories-manage-children ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.product-search-wrap-main {
+  margin-bottom: 16px;
+}
+
+/* Планшеты (1024px и меньше) */
+@media (max-width: 1024px) {
+  .categories-manage-content {
+    max-height: 80vh;
+  }
+
+  .categories-manage-form-group input[type="text"],
+  .categories-manage-form-group input[type="number"] {
+    max-width: 100%;
+  }
+}
+
+/* Планшеты (768px и меньше) */
+@media (max-width: 768px) {
+  .categories-manage-content {
+    max-height: 85vh;
+    padding: 16px;
+  }
+
+  .categories-manage-row {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .categories-manage-name {
+    font-size: 0.95rem;
+  }
+
+  .categories-manage-form-block {
+    padding: 14px;
+  }
+
+  .categories-manage-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .categories-manage-form-actions button {
+    width: 100%;
+  }
+
+  .categories-manage-actions-row {
+    flex-wrap: wrap;
+  }
+}
+
+/* Мобильные (480px и меньше) */
+@media (max-width: 480px) {
+  .categories-manage-content {
+    width: calc(100% - 24px);
+    margin: 12px;
+    max-height: 90vh;
+    padding: 14px;
+  }
+
+  .categories-manage-input-main {
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+
+  .categories-manage-row {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .categories-manage-name-block {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .categories-manage-actions-row {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .categories-manage-item.sub {
+    margin-left: 12px;
+  }
+
+  .categories-manage-item.product {
+    margin-left: 24px;
+  }
+
+  .categories-manage-children {
+    padding: 10px 12px 12px 24px;
+  }
+}
+
+/* Маленькие телефоны (360px и меньше) */
+@media (max-width: 360px) {
+  .categories-manage-content {
+    width: calc(100% - 20px);
+    margin: 10px;
+    padding: 12px;
+  }
+
+  .categories-manage-form-block {
+    padding: 12px;
+  }
+
+  .categories-manage-form-title {
+    font-size: 0.9rem;
+  }
+
+  .categories-manage-btn-add {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .categories-manage-btn-sm {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Очень маленькие экраны (320px и меньше) */
+@media (max-width: 320px) {
+  .categories-manage-content {
+    width: calc(100% - 16px);
+    margin: 8px;
+    padding: 10px;
+  }
+
+  .categories-manage-name {
+    font-size: 0.9rem;
+  }
+}

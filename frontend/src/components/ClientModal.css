@@ -1,0 +1,412 @@
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    box-sizing: border-box;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    position: relative;
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    z-index: 1;
+    border: 1px solid var(--border);
+}
+
+.modal-content-large {
+    max-width: 1200px;
+    width: 95%;
+    padding: 28px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    color: var(--text);
+    font-weight: 700;
+    margin: 0;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--muted);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.close-modal:hover {
+    background: #eef2f7;
+    color: var(--text);
+    transform: rotate(90deg);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: var(--bg-soft);
+}
+
+.input-group input:focus {
+    border-color: var(--accent-purple);
+    outline: none;
+    box-shadow: 0 0 0 4px var(--primary-focus);
+    background: var(--card);
+}
+
+.input-group input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.client-status-info {
+    margin: 25px 0;
+    padding: 20px;
+    background: rgba(245, 175, 25, 0.14);
+    border-radius: var(--radius);
+    border: 1px solid rgba(245, 175, 25, 0.35);
+}
+
+.client-found-info {
+    margin: 16px 0;
+    padding: 14px 16px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.gold-badge {
+    background: var(--card);
+    color: #8a5b00;
+    padding: 15px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.discount-info {
+    color: var(--text);
+}
+
+.discount-info p {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.price-calculation {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.original-price {
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+.final-price {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.discount-preview {
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.discount-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(245, 175, 25, 0.12);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    color: #8a5b00;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.price-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.price-original {
+    text-decoration: line-through;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.price-final {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-soft);
+}
+
+.btn-cancel,
+.btn-submit {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.btn-cancel {
+    background: var(--bg-soft);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background: var(--border-soft);
+    transform: translateY(-1px);
+}
+
+.btn-submit {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+
+.btn-submit:hover:not(:disabled) {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-cancel:disabled,
+.btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.modal-two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.modal-left-column {
+    min-width: 0;
+}
+
+.modal-right-column {
+    min-width: 0;
+}
+
+.modal-left-column h3 {
+    margin-top: 0;
+}
+
+/* Планшеты (1024px и меньше) */
+@media (max-width: 1024px) {
+    .modal-two-columns {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .modal-content-large {
+        max-width: 700px;
+    }
+}
+
+/* Планшеты (768px и меньше) */
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content-large {
+        width: 95%;
+        padding: 20px;
+        max-width: 600px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Мобильные устройства (480px и меньше) */
+@media (max-width: 480px) {
+    .modal-content-large {
+        width: 100%;
+        padding: 16px;
+        margin: 10px;
+    }
+
+    .modal-header {
+        padding: 16px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .form-row {
+        gap: 12px;
+    }
+
+    .input-group label {
+        font-size: 0.85rem;
+    }
+
+    .input-group input {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-cancel,
+    .btn-submit {
+        width: 100%;
+    }
+}
+
+/* Маленькие телефоны (360px и меньше) */
+@media (max-width: 360px) {
+    .modal-content,
+    .modal-content-large {
+        width: calc(100% - 20px);
+        margin: 10px;
+        padding: 14px;
+        max-height: 85vh;
+    }
+
+    .modal-header {
+        padding: 12px 0;
+        margin-bottom: 16px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .close-modal {
+        width: 32px;
+        height: 32px;
+        font-size: 1.5rem;
+    }
+
+    .input-group input {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    .modal-actions {
+        gap: 8px;
+        margin-top: 20px;
+    }
+}
+
+/* Очень маленькие экраны (320px и меньше) */
+@media (max-width: 320px) {
+    .modal-content,
+    .modal-content-large {
+        width: calc(100% - 16px);
+        margin: 8px;
+        padding: 12px;
+    }
+
+    .modal-header h2 {
+        font-size: 1rem;
+    }
+}
