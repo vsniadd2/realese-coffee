@@ -874,26 +874,32 @@ app.get('/api/orders/stats/products', verifyAccessToken, async (req, res) => {
     const { pointId } = getPointFilter(req);
 
     let query = `
-      SELECT 
-        ti.product_name,
-        SUM(ti.quantity) as total_quantity,
-        SUM(
+      SELECT
+        s.product_name,
+        SUM(s.quantity) as total_quantity,
+        SUM(s.item_revenue) as total_revenue,
+        COUNT(DISTINCT s.transaction_id) as order_count
+      FROM (
+        SELECT
+          ti.transaction_id,
+          ti.product_name,
+          ti.quantity,
           (
             (ti.product_price * ti.quantity)
             / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
-          ) * t.final_amount
-        ) as total_revenue,
-        COUNT(DISTINCT ti.transaction_id) as order_count
-      FROM transaction_items ti
-      INNER JOIN transactions t ON ti.transaction_id = t.id
-      WHERE COALESCE(t.operation_type, 'sale') != 'return'
-        AND (
-          ti.product_name NOT ILIKE '%пачка%'
-          AND ti.product_name NOT ILIKE '%турка%'
-          AND ti.product_name NOT ILIKE '%упаковка%'
-          AND ti.product_name NOT ILIKE '%кофе фасованный%'
-          AND ti.product_name NOT ILIKE '%кофе в зернах%'
-        )
+          ) * t.final_amount AS item_revenue
+        FROM transaction_items ti
+        INNER JOIN transactions t ON ti.transaction_id = t.id
+        WHERE COALESCE(t.operation_type, 'sale') != 'return'
+          AND (
+            ti.product_name NOT ILIKE '%пачка%'
+            AND ti.product_name NOT ILIKE '%турка%'
+            AND ti.product_name NOT ILIKE '%упаковка%'
+            AND ti.product_name NOT ILIKE '%кофе фасованный%'
+            AND ti.product_name NOT ILIKE '%кофе в зернах%'
+          )
+      ) s
+      WHERE 1=1
     `;
 
     const conditions = [];
@@ -901,19 +907,19 @@ app.get('/api/orders/stats/products', verifyAccessToken, async (req, res) => {
     let paramIndex = 1;
 
     if (pointId != null) {
-      conditions.push(`t.point_id = $${paramIndex}`);
+      conditions.push(`EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND t2.point_id = $${paramIndex})`);
       params.push(pointId);
       paramIndex++;
     }
 
     if (dateFrom) {
-      conditions.push(`DATE(t.created_at) >= $${paramIndex}`);
+      conditions.push(`EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND DATE(t2.created_at) >= $${paramIndex})`);
       params.push(dateFrom);
       paramIndex++;
     }
 
     if (dateTo) {
-      conditions.push(`DATE(t.created_at) <= $${paramIndex}`);
+      conditions.push(`EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND DATE(t2.created_at) <= $${paramIndex})`);
       params.push(dateTo);
       paramIndex++;
     }
@@ -923,7 +929,7 @@ app.get('/api/orders/stats/products', verifyAccessToken, async (req, res) => {
     }
 
     query += `
-      GROUP BY ti.product_name
+      GROUP BY s.product_name
       ORDER BY total_quantity DESC
     `;
 
@@ -952,29 +958,36 @@ app.get('/api/orders/stats/categories', verifyAccessToken, async (req, res) => {
     const { pointId } = getPointFilter(req);
 
     let query = `
-      SELECT 
-        pc.id as category_id,
-        pc.name as category_name,
-        SUM(ti.quantity) as total_quantity,
-        SUM(
+      SELECT
+        s.category_id,
+        s.category_name,
+        SUM(s.quantity) as total_quantity,
+        SUM(s.item_revenue) as total_revenue,
+        COUNT(DISTINCT s.transaction_id) as order_count
+      FROM (
+        SELECT
+          ti.transaction_id,
+          pc.id as category_id,
+          pc.name as category_name,
+          ti.quantity,
           (
             (ti.product_price * ti.quantity)
             / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
-          ) * t.final_amount
-        ) as total_revenue,
-        COUNT(DISTINCT ti.transaction_id) as order_count
-      FROM transaction_items ti
-      INNER JOIN transactions t ON ti.transaction_id = t.id
-      LEFT JOIN products p ON (
-        CASE 
-          WHEN ti.product_id ~ '^[0-9]+$' THEN CAST(ti.product_id AS INTEGER) = p.id
-          ELSE false
-        END
-      )
-      LEFT JOIN product_subcategories ps ON p.subcategory_id = ps.id
-      LEFT JOIN product_categories pc ON ps.category_id = pc.id
-      WHERE COALESCE(t.operation_type, 'sale') != 'return'
-        AND pc.id IS NOT NULL
+          ) * t.final_amount AS item_revenue
+        FROM transaction_items ti
+        INNER JOIN transactions t ON ti.transaction_id = t.id
+        LEFT JOIN products p ON (
+          CASE
+            WHEN ti.product_id ~ '^[0-9]+$' THEN CAST(ti.product_id AS INTEGER) = p.id
+            ELSE false
+          END
+        )
+        LEFT JOIN product_subcategories ps ON p.subcategory_id = ps.id
+        LEFT JOIN product_categories pc ON ps.category_id = pc.id
+        WHERE COALESCE(t.operation_type, 'sale') != 'return'
+          AND pc.id IS NOT NULL
+      ) s
+      WHERE 1=1
     `;
 
     const conditions = [];
@@ -982,7 +995,7 @@ app.get('/api/orders/stats/categories', verifyAccessToken, async (req, res) => {
     let paramIndex = 1;
 
     if (pointId != null) {
-      conditions.push(`t.point_id = $${paramIndex}`);
+      conditions.push(`EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND t2.point_id = $${paramIndex})`);
       params.push(pointId);
       paramIndex++;
     }
@@ -994,13 +1007,13 @@ app.get('/api/orders/stats/categories', verifyAccessToken, async (req, res) => {
     }
 
     if (dateFrom) {
-      conditions.push(`DATE(t.created_at) >= $${paramIndex}`);
+      conditions.push(`EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND DATE(t2.created_at) >= $${paramIndex})`);
       params.push(dateFrom);
       paramIndex++;
     }
 
     if (dateTo) {
-      conditions.push(`DATE(t.created_at) <= $${paramIndex}`);
+      conditions.push(`EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND DATE(t2.created_at) <= $${paramIndex})`);
       params.push(dateTo);
       paramIndex++;
     }
@@ -1010,7 +1023,7 @@ app.get('/api/orders/stats/categories', verifyAccessToken, async (req, res) => {
     }
 
     query += `
-      GROUP BY pc.id, pc.name
+      GROUP BY s.category_id, s.category_name
       ORDER BY total_quantity DESC
     `;
 
@@ -1045,21 +1058,29 @@ app.get('/api/orders/stats/product', verifyAccessToken, async (req, res) => {
     }
 
     let query = `
-      SELECT 
-        ti.product_name,
-        ti.product_id,
-        SUM(ti.quantity) as total_quantity,
-        SUM(
+      SELECT
+        s.product_name,
+        s.product_id,
+        SUM(s.quantity) as total_quantity,
+        SUM(s.item_revenue) as total_revenue,
+        COUNT(DISTINCT s.transaction_id) as order_count,
+        s.sale_date
+      FROM (
+        SELECT
+          ti.transaction_id,
+          ti.product_name,
+          ti.product_id,
+          ti.quantity,
+          DATE(t.created_at) as sale_date,
           (
             (ti.product_price * ti.quantity)
             / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
-          ) * t.final_amount
-        ) as total_revenue,
-        COUNT(DISTINCT ti.transaction_id) as order_count,
-        DATE(t.created_at) as sale_date
-      FROM transaction_items ti
-      INNER JOIN transactions t ON ti.transaction_id = t.id
-      WHERE COALESCE(t.operation_type, 'sale') != 'return'
+          ) * t.final_amount AS item_revenue
+        FROM transaction_items ti
+        INNER JOIN transactions t ON ti.transaction_id = t.id
+        WHERE COALESCE(t.operation_type, 'sale') != 'return'
+      ) s
+      WHERE 1=1
     `;
 
     const conditions = [];
@@ -1067,29 +1088,29 @@ app.get('/api/orders/stats/product', verifyAccessToken, async (req, res) => {
     let paramIndex = 1;
 
     if (pointId != null) {
-      conditions.push(`t.point_id = $${paramIndex}`);
+      conditions.push(`EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND t2.point_id = $${paramIndex})`);
       params.push(pointId);
       paramIndex++;
     }
 
     if (productId) {
-      conditions.push(`ti.product_id = $${paramIndex}`);
+      conditions.push(`s.product_id = $${paramIndex}`);
       params.push(productId);
       paramIndex++;
     } else if (productName) {
-      conditions.push(`ti.product_name = $${paramIndex}`);
+      conditions.push(`s.product_name = $${paramIndex}`);
       params.push(productName);
       paramIndex++;
     }
 
     if (dateFrom) {
-      conditions.push(`DATE(t.created_at) >= $${paramIndex}`);
+      conditions.push(`s.sale_date >= $${paramIndex}`);
       params.push(dateFrom);
       paramIndex++;
     }
 
     if (dateTo) {
-      conditions.push(`DATE(t.created_at) <= $${paramIndex}`);
+      conditions.push(`s.sale_date <= $${paramIndex}`);
       params.push(dateTo);
       paramIndex++;
     }
@@ -1099,7 +1120,7 @@ app.get('/api/orders/stats/product', verifyAccessToken, async (req, res) => {
     }
 
     query += `
-      GROUP BY ti.product_name, ti.product_id, DATE(t.created_at)
+      GROUP BY s.product_name, s.product_id, s.sale_date
       ORDER BY sale_date ASC
     `;
 
@@ -1142,28 +1163,35 @@ app.get('/api/orders/stats/day-top-products', verifyAccessToken, async (req, res
     }
 
     let query = `
-      SELECT 
-        ti.product_name,
-        ti.product_id,
-        SUM(ti.quantity) as total_quantity,
-        SUM(
+      SELECT
+        s.product_name,
+        s.product_id,
+        SUM(s.quantity) as total_quantity,
+        SUM(s.item_revenue) as total_revenue,
+        COUNT(DISTINCT s.transaction_id) as order_count
+      FROM (
+        SELECT
+          ti.transaction_id,
+          ti.product_name,
+          ti.product_id,
+          ti.quantity,
           (
             (ti.product_price * ti.quantity)
             / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
-          ) * t.final_amount
-        ) as total_revenue,
-        COUNT(DISTINCT ti.transaction_id) as order_count
-      FROM transaction_items ti
-      INNER JOIN transactions t ON ti.transaction_id = t.id
-      WHERE COALESCE(t.operation_type, 'sale') != 'return'
-        AND DATE(t.created_at) = $1
+          ) * t.final_amount AS item_revenue
+        FROM transaction_items ti
+        INNER JOIN transactions t ON ti.transaction_id = t.id
+        WHERE COALESCE(t.operation_type, 'sale') != 'return'
+          AND DATE(t.created_at) = $1
+      ) s
+      WHERE 1=1
     `;
 
     const params = [date];
     let paramIndex = 2;
 
     if (pointId != null) {
-      query += ` AND t.point_id = $${paramIndex}`;
+      query += ` AND EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND t2.point_id = $${paramIndex})`;
       params.push(pointId);
       paramIndex++;
     }
@@ -1175,10 +1203,10 @@ app.get('/api/orders/stats/day-top-products', verifyAccessToken, async (req, res
         LEFT JOIN product_categories pc ON ps.category_id = pc.id
         WHERE (
           CASE 
-            WHEN ti.product_id ~ '^[0-9]+$' THEN CAST(ti.product_id AS INTEGER) = p.id
+            WHEN s.product_id ~ '^[0-9]+$' THEN CAST(s.product_id AS INTEGER) = p.id
             ELSE false
           END
-          OR LOWER(ti.product_name) = LOWER(p.name)
+          OR LOWER(s.product_name) = LOWER(p.name)
         ) AND pc.id = $${paramIndex}
       )`;
       params.push(categoryId);
@@ -1186,7 +1214,7 @@ app.get('/api/orders/stats/day-top-products', verifyAccessToken, async (req, res
     }
 
     query += `
-      GROUP BY ti.product_name, ti.product_id
+      GROUP BY s.product_name, s.product_id
       ORDER BY total_revenue DESC
       LIMIT $${paramIndex}
     `;
@@ -1235,54 +1263,61 @@ app.get('/api/orders/stats/category-products', verifyAccessToken, async (req, re
     }
 
     let query = `
-      SELECT 
-        ti.product_name,
-        ti.product_id,
-        SUM(ti.quantity) as total_quantity,
-        SUM(
+      SELECT
+        s.product_name,
+        s.product_id,
+        SUM(s.quantity) as total_quantity,
+        SUM(s.item_revenue) as total_revenue,
+        COUNT(DISTINCT s.transaction_id) as order_count
+      FROM (
+        SELECT
+          ti.transaction_id,
+          ti.product_name,
+          ti.product_id,
+          ti.quantity,
           (
             (ti.product_price * ti.quantity)
             / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
-          ) * t.final_amount
-        ) as total_revenue,
-        COUNT(DISTINCT ti.transaction_id) as order_count
-      FROM transaction_items ti
-      INNER JOIN transactions t ON ti.transaction_id = t.id
-      LEFT JOIN products p ON (
-        CASE 
-          WHEN ti.product_id ~ '^[0-9]+$' THEN CAST(ti.product_id AS INTEGER) = p.id
-          ELSE false
-        END
-      )
-      LEFT JOIN product_subcategories ps ON p.subcategory_id = ps.id
-      LEFT JOIN product_categories pc ON ps.category_id = pc.id
-      WHERE COALESCE(t.operation_type, 'sale') != 'return'
-        AND pc.id = $1
+          ) * t.final_amount AS item_revenue
+        FROM transaction_items ti
+        INNER JOIN transactions t ON ti.transaction_id = t.id
+        LEFT JOIN products p ON (
+          CASE 
+            WHEN ti.product_id ~ '^[0-9]+$' THEN CAST(ti.product_id AS INTEGER) = p.id
+            ELSE false
+          END
+        )
+        LEFT JOIN product_subcategories ps ON p.subcategory_id = ps.id
+        LEFT JOIN product_categories pc ON ps.category_id = pc.id
+        WHERE COALESCE(t.operation_type, 'sale') != 'return'
+          AND pc.id = $1
+      ) s
+      WHERE 1=1
     `;
 
     const params = [categoryId];
     let paramIndex = 2;
 
     if (pointId != null) {
-      query += ` AND t.point_id = $${paramIndex}`;
+      query += ` AND EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND t2.point_id = $${paramIndex})`;
       params.push(pointId);
       paramIndex++;
     }
 
     if (dateFrom) {
-      query += ` AND DATE(t.created_at) >= $${paramIndex}`;
+      query += ` AND EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND DATE(t2.created_at) >= $${paramIndex})`;
       params.push(dateFrom);
       paramIndex++;
     }
 
     if (dateTo) {
-      query += ` AND DATE(t.created_at) <= $${paramIndex}`;
+      query += ` AND EXISTS (SELECT 1 FROM transactions t2 WHERE t2.id = s.transaction_id AND DATE(t2.created_at) <= $${paramIndex})`;
       params.push(dateTo);
       paramIndex++;
     }
 
     query += `
-      GROUP BY ti.product_name, ti.product_id
+      GROUP BY s.product_name, s.product_id
       ORDER BY total_quantity DESC
     `;
 
