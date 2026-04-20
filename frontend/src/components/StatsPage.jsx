@@ -530,15 +530,6 @@ const StatsPage = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      setProductViewType('category')
-                    }}
-                    className={`view-type-btn ${productViewType === 'category' ? 'active' : ''}`}
-                  >
-                    По категории
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
                       setProductViewType('other')
                       setSelectedCategoryId('')
                     }}
