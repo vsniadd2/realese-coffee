@@ -877,7 +877,12 @@ app.get('/api/orders/stats/products', verifyAccessToken, async (req, res) => {
       SELECT 
         ti.product_name,
         SUM(ti.quantity) as total_quantity,
-        SUM(ti.product_price * ti.quantity) as total_revenue,
+        SUM(
+          (
+            (ti.product_price * ti.quantity)
+            / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
+          ) * t.final_amount
+        ) as total_revenue,
         COUNT(DISTINCT ti.transaction_id) as order_count
       FROM transaction_items ti
       INNER JOIN transactions t ON ti.transaction_id = t.id
@@ -886,11 +891,6 @@ app.get('/api/orders/stats/products', verifyAccessToken, async (req, res) => {
           ti.product_name NOT ILIKE '%пачка%'
           AND ti.product_name NOT ILIKE '%турка%'
           AND ti.product_name NOT ILIKE '%упаковка%'
-          AND ti.product_name NOT ILIKE '%кг%'
-          AND ti.product_name NOT ILIKE '%гр%'
-          AND ti.product_name NOT ILIKE '%1000%'
-          AND ti.product_name NOT ILIKE '%500%'
-          AND ti.product_name NOT ILIKE '%250%'
           AND ti.product_name NOT ILIKE '%кофе фасованный%'
           AND ti.product_name NOT ILIKE '%кофе в зернах%'
         )
@@ -956,7 +956,12 @@ app.get('/api/orders/stats/categories', verifyAccessToken, async (req, res) => {
         pc.id as category_id,
         pc.name as category_name,
         SUM(ti.quantity) as total_quantity,
-        SUM(ti.product_price * ti.quantity) as total_revenue,
+        SUM(
+          (
+            (ti.product_price * ti.quantity)
+            / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
+          ) * t.final_amount
+        ) as total_revenue,
         COUNT(DISTINCT ti.transaction_id) as order_count
       FROM transaction_items ti
       INNER JOIN transactions t ON ti.transaction_id = t.id
@@ -1044,7 +1049,12 @@ app.get('/api/orders/stats/product', verifyAccessToken, async (req, res) => {
         ti.product_name,
         ti.product_id,
         SUM(ti.quantity) as total_quantity,
-        SUM(ti.product_price * ti.quantity) as total_revenue,
+        SUM(
+          (
+            (ti.product_price * ti.quantity)
+            / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
+          ) * t.final_amount
+        ) as total_revenue,
         COUNT(DISTINCT ti.transaction_id) as order_count,
         DATE(t.created_at) as sale_date
       FROM transaction_items ti
@@ -1136,7 +1146,12 @@ app.get('/api/orders/stats/day-top-products', verifyAccessToken, async (req, res
         ti.product_name,
         ti.product_id,
         SUM(ti.quantity) as total_quantity,
-        SUM(ti.product_price * ti.quantity) as total_revenue,
+        SUM(
+          (
+            (ti.product_price * ti.quantity)
+            / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
+          ) * t.final_amount
+        ) as total_revenue,
         COUNT(DISTINCT ti.transaction_id) as order_count
       FROM transaction_items ti
       INNER JOIN transactions t ON ti.transaction_id = t.id
@@ -1163,6 +1178,7 @@ app.get('/api/orders/stats/day-top-products', verifyAccessToken, async (req, res
             WHEN ti.product_id ~ '^[0-9]+$' THEN CAST(ti.product_id AS INTEGER) = p.id
             ELSE false
           END
+          OR LOWER(ti.product_name) = LOWER(p.name)
         ) AND pc.id = $${paramIndex}
       )`;
       params.push(categoryId);
@@ -1223,7 +1239,12 @@ app.get('/api/orders/stats/category-products', verifyAccessToken, async (req, re
         ti.product_name,
         ti.product_id,
         SUM(ti.quantity) as total_quantity,
-        SUM(ti.product_price * ti.quantity) as total_revenue,
+        SUM(
+          (
+            (ti.product_price * ti.quantity)
+            / NULLIF(SUM(ti.product_price * ti.quantity) OVER (PARTITION BY ti.transaction_id), 0)
+          ) * t.final_amount
+        ) as total_revenue,
         COUNT(DISTINCT ti.transaction_id) as order_count
       FROM transaction_items ti
       INNER JOIN transactions t ON ti.transaction_id = t.id
@@ -1346,6 +1367,12 @@ app.get('/api/purchases', verifyAccessToken, async (req, res) => {
         c.middle_name ILIKE $${paramIndex} OR
         CONCAT(COALESCE(c.first_name,''), ' ', COALESCE(c.last_name,'')) ILIKE $${paramIndex} OR
         CONCAT(COALESCE(c.last_name,''), ' ', COALESCE(c.first_name,'')) ILIKE $${paramIndex})
+        OR EXISTS (
+          SELECT 1
+          FROM transaction_items ti
+          WHERE ti.transaction_id = t.id
+            AND ti.product_name ILIKE $${paramIndex}
+        )
         ${isAnonSearch ? ' OR t.client_id IS NULL' : ''}
       )`);
       params.push(searchPattern);

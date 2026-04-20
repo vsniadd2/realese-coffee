@@ -551,7 +551,7 @@ const PurchaseHistory = () => {
             </div>
           )}
           <div className="filter-group">
-            <label htmlFor="searchName">Имя/Фамилия:</label>
+            <label htmlFor="searchName">Клиент / позиция:</label>
             <input
               ref={searchInputRef}
               id="searchName"
@@ -573,7 +573,7 @@ const PurchaseHistory = () => {
               onBlur={() => {
                 wasFocusedRef.current = false
               }}
-              placeholder="Имя, фамилия или Ано для анонимов"
+              placeholder="Имя, фамилия, Ано для анонимов или название позиции"
               className="text-input"
             />
           </div>

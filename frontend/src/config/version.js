@@ -1,2 +1,2 @@
 /** Версия приложения (формат: ГГГГ-ММ-ДД.релиз) */
-export const APP_VERSION = '2026-02-04.3'
+export const APP_VERSION = '2026-04-20-1'
