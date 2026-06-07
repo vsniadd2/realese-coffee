@@ -20,8 +20,10 @@ const getApiUrl = () => {
 
 export const API_URL = getApiUrl()
 
+import { getAccessToken } from '../utils/authStorage'
+
 export const getAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken')
+  const token = getAccessToken()
   return {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` })

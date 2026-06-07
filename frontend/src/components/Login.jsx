@@ -1,13 +1,14 @@
 import React, { useState, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotification } from './NotificationProvider'
+import { getRememberMePreference, setRememberMePreference } from '../utils/authStorage'
 import Footer from './Footer'
 import './Login.css'
 
 const Login = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(true)
+  const [rememberMe, setRememberMe] = useState(getRememberMePreference)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [animating, setAnimating] = useState(false)
@@ -37,14 +38,12 @@ const Login = () => {
     }
     
     setLoading(true)
-    const result = await login(username, password)
+    const result = await login(username, password, rememberMe)
 
     if (!result.success) {
       setError(result.error)
       showNotification(result.error, 'error')
     }
-
-    void rememberMe
     setLoading(false)
     setAnimating(false)
   }
@@ -89,7 +88,11 @@ const Login = () => {
                 <input
                   type="checkbox"
                   checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    setRememberMe(checked)
+                    setRememberMePreference(checked)
+                  }}
                   disabled={loading || animating}
                 />
                 <span>Remember Me</span>

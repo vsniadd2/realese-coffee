@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { authService } from '../services/authService'
 import { isAccessTokenExpired } from '../config/api'
+import {
+  getAccessToken,
+  getRefreshToken,
+  getUserInfo,
+  saveAuthData,
+  updateAccessToken,
+  clearAuthData
+} from '../utils/authStorage'
 
 const AuthContext = createContext(null)
 
@@ -14,8 +22,8 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken'))
-  const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken'))
+  const [accessToken, setAccessToken] = useState(getAccessToken)
+  const [refreshToken, setRefreshToken] = useState(getRefreshToken)
   const [loading, setLoading] = useState(true)
   const [showHelloAfterLogin, setShowHelloAfterLogin] = useState(false)
 
@@ -23,13 +31,11 @@ export const AuthProvider = ({ children }) => {
     setAccessToken(null)
     setRefreshToken(null)
     setUser(null)
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('userInfo')
+    clearAuthData()
   }, [])
 
   const refreshAccessToken = useCallback(async () => {
-    const rtk = localStorage.getItem('refreshToken')
+    const rtk = getRefreshToken()
     if (!rtk) {
       logout()
       return false
@@ -39,13 +45,14 @@ export const AuthProvider = ({ children }) => {
       const data = await authService.refreshToken(rtk)
       setAccessToken(data.accessToken)
       setRefreshToken(rtk)
-      localStorage.setItem('accessToken', data.accessToken)
       if (data.user) {
         setUser(prev => {
           const merged = { ...prev, ...data.user }
-          localStorage.setItem('userInfo', JSON.stringify(merged))
+          updateAccessToken(data.accessToken, merged)
           return merged
         })
+      } else {
+        updateAccessToken(data.accessToken)
       }
       return true
     } catch {
@@ -56,7 +63,7 @@ export const AuthProvider = ({ children }) => {
 
   /** До первого рендера приложения — иначе /api/* уходит с просроченным JWT и даёт 403 */
   const ensureValidToken = useCallback(async () => {
-    const token = localStorage.getItem('accessToken')
+    const token = getAccessToken()
     if (!token) return
     if (!isAccessTokenExpired(token)) return
     await refreshAccessToken()
@@ -65,10 +72,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const at = localStorage.getItem('accessToken')
+      const at = getAccessToken()
       if (at) {
         try {
-          const stored = localStorage.getItem('userInfo')
+          const stored = getUserInfo()
           if (stored) {
             setUser(JSON.parse(stored))
           } else {
@@ -88,7 +95,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [ensureValidToken])
 
-  const login = async (username, password) => {
+  const login = async (username, password, rememberMe = true) => {
     try {
       const data = await authService.login(username, password)
       
@@ -97,9 +104,14 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user)
       setShowHelloAfterLogin(true)
       
-      localStorage.setItem('accessToken', data.accessToken)
-      localStorage.setItem('refreshToken', data.refreshToken)
-      if (data.user) localStorage.setItem('userInfo', JSON.stringify(data.user))
+      saveAuthData(
+        {
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          user: data.user
+        },
+        rememberMe
+      )
       
       return { success: true }
     } catch (error) {
