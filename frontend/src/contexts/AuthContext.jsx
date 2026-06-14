@@ -95,6 +95,33 @@ export const AuthProvider = ({ children }) => {
     }
   }, [ensureValidToken])
 
+  // Продлеваем сессию, пока вкладка открыта (access token живёт ~24 ч)
+  useEffect(() => {
+    if (!accessToken) return
+
+    const refreshIfNeeded = () => {
+      const token = getAccessToken()
+      if (token && isAccessTokenExpired(token)) {
+        refreshAccessToken()
+      }
+    }
+
+    refreshIfNeeded()
+    const intervalId = setInterval(refreshIfNeeded, 2 * 60 * 1000)
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        ensureValidToken()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [accessToken, refreshAccessToken, ensureValidToken])
+
   const login = async (username, password, rememberMe = true) => {
     try {
       const data = await authService.login(username, password)

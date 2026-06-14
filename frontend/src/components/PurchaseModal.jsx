@@ -26,7 +26,7 @@ const PurchaseModal = ({ client, onClose }) => {
   const { addPurchase } = useClients()
   const { showNotification } = useNotification()
   const { refreshAll } = useDataRefresh()
-  const { refreshAccessToken } = useAuth()
+  const { refreshAccessToken, ensureValidToken } = useAuth()
 
   useEffect(() => {
     setLocalClient(client)
@@ -78,6 +78,8 @@ const PurchaseModal = ({ client, onClose }) => {
     setShowPaymentModal(false)
 
     try {
+      await ensureValidToken()
+
       const purchaseData = pendingPurchaseData
       if (!purchaseData) {
         setLoading(false)

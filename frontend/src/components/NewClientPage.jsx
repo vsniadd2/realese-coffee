@@ -13,10 +13,11 @@ import {
   personalDiscountPercent,
   priceAfterPercentDiscount
 } from '../utils/clientDiscount'
+import { withAuthRetry } from '../utils/withAuthRetry'
 import './NewClientPage.css'
 
 const NewClientPage = () => {
-  const { refreshAccessToken } = useAuth()
+  const { refreshAccessToken, ensureValidToken } = useAuth()
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -114,16 +115,15 @@ const NewClientPage = () => {
       try {
         setSearching(true)
         try {
-          const data = await clientService.search(trimmedSearchQuery)
+          const data = await withAuthRetry(
+            () => clientService.search(trimmedSearchQuery),
+            refreshAccessToken
+          )
           setSearchResults(Array.isArray(data) ? data : [])
         } catch (e) {
-          if (e?.message === 'UNAUTHORIZED') {
-            const refreshed = await refreshAccessToken()
-            if (refreshed) {
-              const data = await clientService.search(trimmedSearchQuery)
-              setSearchResults(Array.isArray(data) ? data : [])
-              return
-            }
+          if (e?.message === 'Сессия истекла. Войдите снова.') {
+            setSearchError(e.message)
+            return
           }
           throw e
         }
@@ -260,6 +260,8 @@ const NewClientPage = () => {
     setShowPaymentModal(false)
 
     try {
+      await ensureValidToken()
+
       const orderData = pendingOrderData
       if (!orderData) {
         setLoading(false)
@@ -375,6 +377,7 @@ const NewClientPage = () => {
     setCheckedClient(null)
 
     try {
+      await ensureValidToken()
       // Аноним: все поля клиента пустые (имя, фамилия, отчество, ID)
       const firstName = (formData.firstName || '').trim()
       const lastName = (formData.lastName || '').trim()
@@ -421,8 +424,11 @@ const NewClientPage = () => {
       let existingClient = null
       if (clientId) {
         try {
-          existingClient = await clientService.getById(clientId)
-          
+          existingClient = await withAuthRetry(
+            () => clientService.getById(clientId),
+            refreshAccessToken
+          )
+
           if (existingClient) {
             // Клиент найден - рассчитываем скидку и показываем информацию
             const price = productsTotal > 0 ? productsTotal : (parseFloat(formData.price) || 0)
@@ -459,9 +465,8 @@ const NewClientPage = () => {
             }
           }
         } catch (err) {
-          // Клиент не найден - продолжаем создание нового
-          if (err.message === 'UNAUTHORIZED') {
-            showNotification('Ошибка авторизации', 'error')
+          if (err.message === 'Сессия истекла. Войдите снова.') {
+            showNotification(err.message, 'error')
             return
           }
           // 404 или другой ошибка - клиент не найден, создаем нового

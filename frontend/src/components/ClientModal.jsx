@@ -3,6 +3,8 @@ import { useClients } from '../hooks/useClients'
 import { clientService } from '../services/clientService'
 import { useNotification } from './NotificationProvider'
 import { useDataRefresh } from '../contexts/DataRefreshContext'
+import { useAuth } from '../contexts/AuthContext'
+import { withAuthRetry } from '../utils/withAuthRetry'
 import ProductSelector from './ProductSelector'
 import PaymentMethodModal from './PaymentMethodModal'
 import { buildPurchaseDiscountInfo, effectiveDiscountPercentForPurchase, priceAfterPercentDiscount } from '../utils/clientDiscount'
@@ -28,6 +30,7 @@ const ClientModal = ({ onClose }) => {
   const { addClient, addPurchase } = useClients()
   const { showNotification } = useNotification()
   const { refreshAll } = useDataRefresh()
+  const { refreshAccessToken, ensureValidToken } = useAuth()
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -66,6 +69,8 @@ const ClientModal = ({ onClose }) => {
     setShowPaymentModal(false)
 
     try {
+      await ensureValidToken()
+
       const orderData = pendingOrderData
       if (!orderData) {
         setLoading(false)
@@ -142,11 +147,16 @@ const ClientModal = ({ onClose }) => {
     setCheckedClient(null)
 
     try {
+      await ensureValidToken()
+
       // Проверка существующего клиента по clientId, если указан
       let existingClient = null
       if (formData.clientId && formData.clientId.trim()) {
         try {
-          existingClient = await clientService.getById(formData.clientId.trim())
+          existingClient = await withAuthRetry(
+            () => clientService.getById(formData.clientId.trim()),
+            refreshAccessToken
+          )
           
           if (existingClient) {
             // Клиент найден - рассчитываем скидку и показываем информацию
@@ -183,9 +193,8 @@ const ClientModal = ({ onClose }) => {
             }
           }
         } catch (err) {
-          // Клиент не найден - продолжаем создание нового
-          if (err.message === 'UNAUTHORIZED') {
-            showNotification('Ошибка авторизации', 'error')
+          if (err.message === 'Сессия истекла. Войдите снова.') {
+            showNotification(err.message, 'error')
             return
           }
           // 404 или другой ошибка - клиент не найден, создаем нового

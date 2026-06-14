@@ -8,7 +8,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || JWT_SECRET;
 const generateAccessToken = (userId, username, role = 'user', pointId = null) => {
   const payload = { userId, username, role };
   if (pointId != null) payload.pointId = pointId;
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
 };
 
 // Генерация refresh токена
