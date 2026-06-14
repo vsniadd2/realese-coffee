@@ -14,8 +14,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
       POSTGRES_DB: ${POSTGRES_DB:-coffee_crm}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    # Порт 5432 НЕ пробрасываем наружу: backend ходит к postgres по внутренней сети Docker.
+    # Открытый 5432 в интернет = брутфорс и риск снова сломать pg_hba.conf / backend.
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
