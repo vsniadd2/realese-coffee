@@ -7,6 +7,7 @@ const getPointDisplayName = (user) => {
   const u = user.username.toLowerCase()
   if (u === 'chervenskiy') return 'Червенский'
   if (u === 'valeryanova') return 'Валерьянова'
+  if (u === 'senitsa67') return 'Сеница'
   if (u === 'admin') return 'АЧервенский'
   return user.pointName || user.username
 }

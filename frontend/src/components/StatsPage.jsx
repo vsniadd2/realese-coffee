@@ -522,9 +522,9 @@ const StatsPage = () => {
                         setSelectedCategoryId('')
                       }}
                       className={`view-type-btn ${productViewType === 'all' ? 'active' : ''}`}
-                      title="Данные по обеим точкам (Червенский + Валерианова)"
+                      title="Данные по всем точкам"
                     >
-                      Общий (обе точки)
+                      Общий (все точки)
                     </button>
                   )}
                   <button
@@ -677,7 +677,7 @@ const StatsPage = () => {
               </div>
             )}
 
-            {/* Общий график — объединённые данные по всем точкам (Червенский + Валерианова) */}
+            {/* Общий график — объединённые данные по всем точкам */}
             {productViewType === 'all' && (
               <>
                 {productsStats.length > 0 && (

@@ -1,7 +1,7 @@
 /**
- * Создание начальных пользователей при первом запуске.
- * Этот скрипт вызывается автоматически из database.js при инициализации БД,
- * если таблица admins пустая (первый запуск).
+ * Создание начальных пользователей при запуске.
+ * Вызывается из database.js после миграций.
+ * Существующие пользователи не трогаются; недостающие из списка создаются.
  */
 
 const bcrypt = require('bcryptjs');
@@ -9,21 +9,13 @@ const { pool } = require('../database');
 
 async function createInitialUsers() {
   try {
-    // Проверяем, есть ли уже пользователи в БД
-    const result = await pool.query('SELECT COUNT(*) as count FROM admins');
-    const adminCount = parseInt(result.rows[0].count);
+    console.log('🔄 Проверка начальных пользователей...');
 
-    if (adminCount > 0) {
-      console.log('ℹ️ В БД уже есть пользователи, пропускаем создание начальных пользователей');
-      return;
-    }
-
-    console.log('🔄 Первый запуск: создание начальных пользователей...');
-
-    // Список пользователей для создания (point_id: 1 = Червенский, 2 = Валерианова, null = админ, все точки)
+    // Список пользователей (point_id: 1 = Червенский, 2 = Валерианова, 3 = Сеница)
     const users = [
       { username: 'chervenskiy', password: '4506', role: 'user', pointId: 1 },
       { username: 'valeryanova', password: '4506', role: 'user', pointId: 2 },
+      { username: 'senitsa67', password: '6767', role: 'user', pointId: 3 },
       { username: 'admin', password: '7511', role: 'admin', pointId: 1 }
     ];
 
@@ -70,4 +62,3 @@ async function createInitialUsers() {
 }
 
 module.exports = { createInitialUsers };
-

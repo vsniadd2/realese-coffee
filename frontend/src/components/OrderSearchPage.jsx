@@ -119,6 +119,7 @@ const OrderSearchPage = () => {
                 <option value="">Все пользователи</option>
                 <option value="chervenskiy">chervenskiy</option>
                 <option value="valeryanova">valeryanova</option>
+                <option value="senitsa67">senitsa67</option>
               </select>
             </div>
           </div>

@@ -55,15 +55,10 @@ const initDatabase = async () => {
     await runMigrations(client);
     console.log('✅ Миграции проверены, структура БД актуальна');
 
-    // Создание начальных пользователей только при первом запуске (нет ни одного админа)
+    // Создание недостающих начальных пользователей (существующие не трогаются)
     try {
-      const adminCountResult = await client.query('SELECT COUNT(*) as count FROM admins');
-      const adminCount = parseInt(adminCountResult.rows[0].count, 10);
-      if (adminCount === 0) {
-        console.log('🔄 Первый запуск: создание начальных пользователей...');
-        const { createInitialUsers } = require('./scripts/create-initial-users');
-        await createInitialUsers();
-      }
+      const { createInitialUsers } = require('./scripts/create-initial-users');
+      await createInitialUsers();
     } catch (userCheckError) {
       console.log('ℹ️ Проверка пользователей:', userCheckError.message);
     }
